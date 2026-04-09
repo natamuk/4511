@@ -1,0 +1,91 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+package com.mycompany.system.controller;
+
+import com.google.gson.Gson;
+import com.mycompany.system.model.LoginUser;
+import com.mycompany.system.util.DBUtil;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.*;
+
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.HashMap;
+import java.util.Map;
+
+@WebServlet("/admin/update-profile")
+public class AdminProfileUpdateServlet extends HttpServlet {
+    private final Gson gson = new Gson();
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("application/json;charset=UTF-8");
+        Map<String, Object> result = new HashMap<>();
+
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("loginUser") == null || !"admin".equals(session.getAttribute("role"))) {
+            writeJson(response, HttpServletResponse.SC_UNAUTHORIZED, false, "Unauthorized", result);
+            return;
+        }
+
+        LoginUser user = (LoginUser) session.getAttribute("loginUser");
+        Long adminId = user.getId();
+
+        String oldPwd = request.getParameter("oldPwd");
+        String newPwd = request.getParameter("newPwd");
+
+        if (newPwd == null || newPwd.trim().isEmpty()) {
+            writeJson(response, HttpServletResponse.SC_BAD_REQUEST, false, "New password is required", result);
+            return;
+        }
+        if (oldPwd == null || oldPwd.trim().isEmpty()) {
+            writeJson(response, HttpServletResponse.SC_BAD_REQUEST, false, "Current password is required", result);
+            return;
+        }
+
+        try (Connection conn = DBUtil.getConnection()) {
+            // 驗證舊密碼
+            try (PreparedStatement ps = conn.prepareStatement("SELECT password FROM admin WHERE id = ?")) {
+                ps.setLong(1, adminId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (!rs.next()) {
+                        writeJson(response, HttpServletResponse.SC_NOT_FOUND, false, "Admin user not found", result);
+                        return;
+                    }
+                    String currentPwd = rs.getString("password");
+                    if (currentPwd == null || !currentPwd.equals(oldPwd)) {
+                        writeJson(response, HttpServletResponse.SC_FORBIDDEN, false, "Incorrect current password", result);
+                        return;
+                    }
+                }
+            }
+
+            // 更新新密碼
+            try (PreparedStatement ps = conn.prepareStatement("UPDATE admin SET password = ?, update_time = NOW() WHERE id = ?")) {
+                ps.setString(1, newPwd);
+                ps.setLong(2, adminId);
+                int rowsAffected = ps.executeUpdate();
+                
+                if (rowsAffected > 0) {
+                    writeJson(response, HttpServletResponse.SC_OK, true, "Password updated successfully", result);
+                } else {
+                    writeJson(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, false, "Failed to update password", result);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            writeJson(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, false, "Server error: " + e.getMessage(), result);
+        }
+    }
+
+    private void writeJson(HttpServletResponse response, int status, boolean success, String message, Map<String, Object> map) throws IOException {
+        response.setStatus(status);
+        map.put("success", success);
+        map.put("message", message);
+        response.getWriter().write(gson.toJson(map));
+    }
+}
