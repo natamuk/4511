@@ -1,0 +1,13 @@
+<%-- 
+    Document   : checkin-contents
+    Created on : 2026年4月23日, 02:22:44
+    Author     : 123
+--%>
+
+<%@ page contentType="text/html;charset=UTF-8" language="java" isELIgnored="true" %>
+<div class='glass rounded-3xl p-6'>
+    <h3 class='text-2xl font-semibold mb-6'>Pending Consultations</h3>
+    <div class='space-y-3' id="checkin-list">
+        <div class="py-10 text-center text-gray-500">No patients are currently called or in consultation.</div>
+    </div>
+</div>

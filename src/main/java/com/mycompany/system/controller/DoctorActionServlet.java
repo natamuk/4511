@@ -2,6 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
+// DoctorActionServlet.java（替換現有檔案）
 package com.mycompany.system.controller;
 
 import com.google.gson.Gson;
@@ -22,58 +23,108 @@ public class DoctorActionServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        response.setContentType("application/json;charset=UTF-8");
+        // 基本回傳結構
         Map<String, Object> result = new HashMap<>();
+        boolean success = false;
+        String message = null;
 
-        HttpSession session = request.getSession();
-        LoginUser user = (LoginUser) session.getAttribute("loginUser");
-        if (user == null || !"doctor".equals(session.getAttribute("role"))) {
-            result.put("success", false);
-            result.put("message", "Unauthorized");
-            response.getWriter().write(gson.toJson(result));
+        HttpSession session = request.getSession(false);
+        LoginUser user = session == null ? null : (LoginUser) session.getAttribute("loginUser");
+        if (user == null || session == null || !"doctor".equals(session.getAttribute("role"))) {
+            message = "Unauthorized";
+            respond(request, response, false, message, HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
 
         String action = request.getParameter("action");
         Long id = parseLong(request.getParameter("id"));
         Long statusParam = parseLong(request.getParameter("status"));
-        String sourceType = request.getParameter("sourceType"); // 新增：判斷來源
+        String sourceType = request.getParameter("sourceType"); // optional
+
+        if (action == null || id == null) {
+            message = "Missing parameters";
+            respond(request, response, false, message, HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
 
         try (Connection conn = DBUtil.getConnection()) {
             conn.setAutoCommit(false);
             try {
-                if ("approve".equals(action)) {
+                if ("approve".equalsIgnoreCase(action)) {
                     approveRegistration(conn, user.getId(), id);
-                    writeNotification(conn, getPatientIdByRegistration(conn, id), "Appointment Approved", "Your appointment has been approved.", "success");
-                } else if ("reject".equals(action)) {
+                    Long patientId = getPatientIdByRegistration(conn, id);
+                    writeNotification(conn, patientId, "Appointment Approved", "Your appointment has been approved.", "success");
+                    success = true;
+                } else if ("reject".equalsIgnoreCase(action)) {
                     Long patientId = getPatientIdByRegistration(conn, id);
                     rejectRegistration(conn, user.getId(), id);
                     writeNotification(conn, patientId, "Appointment Rejected", "Your appointment has been rejected.", "warning");
-                } else if ("update".equals(action)) {
+                    success = true;
+                } else if ("update".equalsIgnoreCase(action)) {
                     if (statusParam == null) throw new IllegalArgumentException("Missing status");
                     updateStatus(conn, user.getId(), id, sourceType, statusParam.intValue());
-                } else if ("skip".equals(action)) {
+                    success = true;
+                } else if ("skip".equalsIgnoreCase(action)) {
                     skipBySource(conn, user.getId(), id, sourceType);
-                } else if ("callNext".equals(action)) {
+                    success = true;
+                } else if ("callNext".equalsIgnoreCase(action)) {
                     callNext(conn, user.getId());
+                    success = true;
                 } else {
                     throw new IllegalArgumentException("Unknown action");
                 }
 
                 conn.commit();
-                result.put("success", true);
             } catch (Exception e) {
                 conn.rollback();
-                result.put("success", false);
-                result.put("message", e.getMessage());
+                message = e.getMessage();
+                success = false;
+            } finally {
+                conn.setAutoCommit(true);
             }
         } catch (Exception e) {
-            result.put("success", false);
-            result.put("message", e.getMessage());
+            e.printStackTrace();
+            message = e.getMessage();
+            success = false;
         }
-        response.getWriter().write(gson.toJson(result));
+
+        // 最後回應：若為 AJAX -> JSON；否則放 flash 並 redirect 回 referer
+        respond(request, response, success, message, HttpServletResponse.SC_OK);
     }
 
+    // 判斷並回應（JSON 或 redirect）
+    private void respond(HttpServletRequest request, HttpServletResponse response, boolean success, String message, int successStatus) throws IOException {
+        // 判斷是否為 AJAX
+        String ajaxHeader = request.getHeader("X-Requested-With");
+        String accept = request.getHeader("Accept");
+        boolean wantsJson = (ajaxHeader != null && "XMLHttpRequest".equalsIgnoreCase(ajaxHeader))
+                || (accept != null && accept.contains("application/json"))
+                || "true".equalsIgnoreCase(request.getParameter("ajax"));
+
+        if (wantsJson) {
+            response.setContentType("application/json;charset=UTF-8");
+            response.setStatus(success ? successStatus : HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            Map<String, Object> r = new HashMap<>();
+            r.put("success", success);
+            if (!success) r.put("message", message == null ? "Operation failed" : message);
+            response.getWriter().write(gson.toJson(r));
+        } else {
+            // 同步表單：使用 flash message 並 redirect 回 referer（沒有 referer 則導到 dashboard）
+            HttpSession session = request.getSession(true);
+            if (success) session.setAttribute("flash_success", "Operation succeeded");
+            else session.setAttribute("flash_error", message == null ? "Operation failed" : message);
+
+            String referer = request.getHeader("Referer");
+            if (referer == null || referer.isBlank()) {
+                // fallback 頁面：醫生 dashboard
+                response.sendRedirect(request.getContextPath() + "/doctor/dashboard");
+            } else {
+                response.sendRedirect(referer);
+            }
+        }
+    }
+
+    // 以下為原有業務邏輯函式（我保留你的實作，若你已有其他邏輯可替換）
     private void approveRegistration(Connection conn, Long doctorId, Long regId) throws Exception {
         String sql = "UPDATE registration SET status = 3, call_time = NOW(), update_time = NOW() WHERE id = ? AND doctor_id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -112,7 +163,6 @@ public class DoctorActionServlet extends HttpServlet {
         }
     }
 
-    // 修正：依照來源精確更新，避免 ID 碰撞，並發送通知
     private void skipBySource(Connection conn, Long doctorId, Long id, String sourceType) throws Exception {
         if ("QUEUE".equalsIgnoreCase(sourceType)) {
             try (PreparedStatement ps = conn.prepareStatement("UPDATE queue SET status = 'skipped', updated_time = NOW() WHERE id = ?")) {
@@ -129,14 +179,12 @@ public class DoctorActionServlet extends HttpServlet {
         }
     }
 
-    // 修正：綜合排序後叫號，並發送通知
     private void callNext(Connection conn, Long doctorId) throws Exception {
         Long regId = null, queueId = null;
         try (PreparedStatement ps = conn.prepareStatement("SELECT id FROM registration WHERE doctor_id = ? AND status = 1 AND reg_date = CURDATE() ORDER BY queue_no ASC LIMIT 1")) {
             ps.setLong(1, doctorId);
             try (ResultSet rs = ps.executeQuery()) { if (rs.next()) regId = rs.getLong("id"); }
         }
-        // 如果預約名單為空，才找現場排隊
         if (regId != null) {
             try (PreparedStatement ps = conn.prepareStatement("UPDATE registration SET status = 3, call_time = NOW(), update_time = NOW() WHERE id = ?")) {
                 ps.setLong(1, regId); ps.executeUpdate();
