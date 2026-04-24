@@ -5,15 +5,13 @@
 package com.mycompany.system.controller;
 
 import com.google.gson.Gson;
+import com.mycompany.system.bean.AdminBean;
+import com.mycompany.system.db.AdminDB;
 import com.mycompany.system.model.LoginUser;
-import com.mycompany.system.util.DBUtil;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -47,34 +45,20 @@ public class AdminProfileUpdateServlet extends HttpServlet {
             return;
         }
 
-        try (Connection conn = DBUtil.getConnection()) {
-            // 驗證舊密碼
-            try (PreparedStatement ps = conn.prepareStatement("SELECT password FROM admin WHERE id = ?")) {
-                ps.setLong(1, adminId);
-                try (ResultSet rs = ps.executeQuery()) {
-                    if (!rs.next()) {
-                        writeJson(response, HttpServletResponse.SC_NOT_FOUND, false, "Admin user not found", result);
-                        return;
-                    }
-                    String currentPwd = rs.getString("password");
-                    if (currentPwd == null || !currentPwd.equals(oldPwd)) {
-                        writeJson(response, HttpServletResponse.SC_FORBIDDEN, false, "Incorrect current password", result);
-                        return;
-                    }
-                }
+        try {
+            AdminBean admin = AdminDB.getById(adminId);
+            if (admin == null) {
+                writeJson(response, HttpServletResponse.SC_NOT_FOUND, false, "Admin user not found", result);
+                return;
             }
-
-            // 更新新密碼
-            try (PreparedStatement ps = conn.prepareStatement("UPDATE admin SET password = ?, update_time = NOW() WHERE id = ?")) {
-                ps.setString(1, newPwd);
-                ps.setLong(2, adminId);
-                int rowsAffected = ps.executeUpdate();
-                
-                if (rowsAffected > 0) {
-                    writeJson(response, HttpServletResponse.SC_OK, true, "Password updated successfully", result);
-                } else {
-                    writeJson(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, false, "Failed to update password", result);
-                }
+            if (!admin.getPassword().equals(oldPwd)) {
+                writeJson(response, HttpServletResponse.SC_FORBIDDEN, false, "Incorrect current password", result);
+                return;
+            }
+            if (AdminDB.updatePassword(adminId, newPwd)) {
+                writeJson(response, HttpServletResponse.SC_OK, true, "Password updated successfully", result);
+            } else {
+                writeJson(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, false, "Failed to update password", result);
             }
         } catch (Exception e) {
             e.printStackTrace();

@@ -1,5 +1,7 @@
 package com.mycompany.system.controller;
 
+import com.mycompany.system.bean.AdminBean;
+import com.mycompany.system.db.AdminDB;
 import com.mycompany.system.dao.AdminDashboardDao;
 import com.mycompany.system.model.LoginUser;
 import jakarta.servlet.ServletException;
@@ -29,17 +31,16 @@ public class AdminDashboardServlet extends HttpServlet {
         LoginUser user = (LoginUser) session.getAttribute("loginUser");
         AdminDashboardDao dao = new AdminDashboardDao();
 
-        var doctorUsers = dao.getDoctors();
-        var patientUsers = dao.getPatients();
+        AdminBean adminProfile = AdminDB.getById(user.getId());
+        request.setAttribute("adminProfile", adminProfile);
 
-        request.setAttribute("adminProfile", dao.getAdminProfile(user.getId()));
         request.setAttribute("appointments", dao.getAppointments());
         request.setAttribute("queueList", dao.getQueueList());
         request.setAttribute("notifications", dao.getNotifications(user.getId()));
         request.setAttribute("issues", dao.getIssues());
         request.setAttribute("logs", dao.getLogs());
-        request.setAttribute("doctorUsers", doctorUsers);
-        request.setAttribute("patientUsers", patientUsers);
+        request.setAttribute("doctorUsers", dao.getDoctors());
+        request.setAttribute("patientUsers", dao.getPatients());
         request.setAttribute("clinics", dao.getClinics());
         request.setAttribute("quota", dao.getQuota());
         request.setAttribute("settings", dao.getSettings());

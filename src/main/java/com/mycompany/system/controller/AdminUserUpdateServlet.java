@@ -5,7 +5,10 @@
 package com.mycompany.system.controller;
 
 import com.google.gson.Gson;
-import com.mycompany.system.dao.AdminDashboardDao;
+import com.mycompany.system.bean.DoctorBean;
+import com.mycompany.system.bean.PatientBean;
+import com.mycompany.system.db.DoctorDB;
+import com.mycompany.system.db.PatientDB;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
@@ -25,7 +28,6 @@ public class AdminUserUpdateServlet extends HttpServlet {
         response.setContentType("application/json;charset=UTF-8");
         Map<String, Object> result = new HashMap<>();
 
-        // 權限檢查
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("loginUser") == null ||
                 !"admin".equals(session.getAttribute("role"))) {
@@ -41,7 +43,7 @@ public class AdminUserUpdateServlet extends HttpServlet {
         String realName = request.getParameter("realName");
         String phone = request.getParameter("phone");
         String email = request.getParameter("email");
-        String title = request.getParameter("title");           // doctor 用
+        String title = request.getParameter("title");
         String departmentIdStr = request.getParameter("departmentId");
 
         if (idStr == null || type == null) {
@@ -54,15 +56,28 @@ public class AdminUserUpdateServlet extends HttpServlet {
 
         try {
             Long id = Long.parseLong(idStr);
-            AdminDashboardDao dao = new AdminDashboardDao();
             boolean success = false;
 
             if ("doctor".equalsIgnoreCase(type)) {
-                Long deptId = departmentIdStr != null && !departmentIdStr.isBlank() 
-                    ? Long.parseLong(departmentIdStr) : null;
-                success = dao.updateDoctor(id, realName, phone, email, title, deptId);
+                DoctorBean d = new DoctorBean();
+                d.setId(id);
+                d.setRealName(realName);
+                d.setPhone(phone);
+                d.setEmail(email);
+                d.setTitle(title);
+                if (departmentIdStr != null && !departmentIdStr.isBlank()) {
+                    d.setDepartmentId(Long.parseLong(departmentIdStr));
+                } else {
+                    d.setDepartmentId(1L);
+                }
+                success = DoctorDB.update(d);
             } else if ("patient".equalsIgnoreCase(type)) {
-                success = dao.updatePatient(id, realName, phone, email);
+                PatientBean p = new PatientBean();
+                p.setId(id);
+                p.setRealName(realName);
+                p.setPhone(phone);
+                p.setEmail(email);
+                success = PatientDB.update(p);
             } else {
                 result.put("success", false);
                 result.put("message", "Invalid user type");

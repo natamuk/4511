@@ -5,7 +5,8 @@
 package com.mycompany.system.controller;
 
 import com.google.gson.Gson;
-import com.mycompany.system.dao.AdminDashboardDao;
+import com.mycompany.system.db.DoctorDB;
+import com.mycompany.system.db.PatientDB;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
@@ -47,15 +48,13 @@ public class AdminUserManageServlet extends HttpServlet {
         }
 
         try {
-            // 加固：防止前端傳遞非數字 ID 導致當機
             Long id = Long.parseLong(idStr);
-            AdminDashboardDao dao = new AdminDashboardDao();
             boolean success = false;
             
             if ("doctor".equalsIgnoreCase(type)) {
-                success = dao.disableDoctor(id);
+                success = DoctorDB.disable(id);
             } else if ("patient".equalsIgnoreCase(type)) {
-                success = dao.disablePatient(id);
+                success = PatientDB.disable(id);
             } else {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 result.put("success", false);

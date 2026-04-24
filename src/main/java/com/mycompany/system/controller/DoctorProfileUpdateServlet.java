@@ -5,16 +5,14 @@
 package com.mycompany.system.controller;
 
 import com.google.gson.Gson;
+import com.mycompany.system.bean.DoctorBean;
+import com.mycompany.system.db.DoctorDB;
 import com.mycompany.system.model.LoginUser;
-import com.mycompany.system.util.DBUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -43,28 +41,21 @@ public class DoctorProfileUpdateServlet extends HttpServlet {
             return;
         }
 
-        try (Connection conn = DBUtil.getConnection()) {
-            try (PreparedStatement ps = conn.prepareStatement("SELECT password FROM doctor WHERE id = ?")) {
-                ps.setLong(1, doctorId);
-                try (ResultSet rs = ps.executeQuery()) {
-                    if (rs.next()) {
-                        String currentPwd = rs.getString("password");
-                        if (currentPwd == null || !currentPwd.equals(oldPwd)) {
-                            writeJson(response, 400, false, "Incorrect current password", result);
-                            return;
-                        }
-                    } else {
-                        writeJson(response, 404, false, "User not found", result);
-                        return;
-                    }
-                }
+        try {
+            DoctorBean doctor = DoctorDB.getById(doctorId);
+            if (doctor == null) {
+                writeJson(response, 404, false, "User not found", result);
+                return;
             }
-            try (PreparedStatement ps = conn.prepareStatement("UPDATE doctor SET password = ?, update_time = NOW() WHERE id = ?")) {
-                ps.setString(1, newPwd);
-                ps.setLong(2, doctorId);
-                ps.executeUpdate();
+            if (!doctor.getPassword().equals(oldPwd)) {
+                writeJson(response, 400, false, "Incorrect current password", result);
+                return;
             }
-            writeJson(response, 200, true, "Password updated successfully", result);
+            if (DoctorDB.updatePassword(doctorId, newPwd)) {
+                writeJson(response, 200, true, "Password updated successfully", result);
+            } else {
+                writeJson(response, 500, false, "Failed to update password", result);
+            }
         } catch (Exception e) {
             writeJson(response, 500, false, "Server error: " + e.getMessage(), result);
         }

@@ -5,12 +5,18 @@
 package com.mycompany.system.controller;
 
 import com.google.gson.Gson;
-import com.mycompany.system.dao.AdminDashboardDao;
+import com.mycompany.system.bean.AdminBean;
+import com.mycompany.system.bean.DoctorBean;
+import com.mycompany.system.bean.PatientBean;
+import com.mycompany.system.db.AdminDB;
+import com.mycompany.system.db.DoctorDB;
+import com.mycompany.system.db.PatientDB;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -53,22 +59,45 @@ public class AdminUserCreateServlet extends HttpServlet {
         }
 
         try {
-            AdminDashboardDao dao = new AdminDashboardDao();
             boolean success = false;
 
             switch (type.toLowerCase()) {
                 case "patient":
-                    success = dao.createPatient(username, password, realName, phone, email);
+                    PatientBean p = new PatientBean();
+                    p.setUsername(username);
+                    p.setPassword(password);
+                    p.setRealName(realName);
+                    p.setPhone(phone);
+                    p.setEmail(email);
+                    p.setBalance(BigDecimal.ZERO);
+                    p.setStatus(1);
+                    success = PatientDB.insert(p);
                     break;
                 case "doctor":
-                    Long departmentId = null;
+                    DoctorBean d = new DoctorBean();
+                    d.setUsername(username);
+                    d.setPassword(password);
+                    d.setRealName(realName);
+                    d.setPhone(phone);
+                    d.setEmail(email);
+                    d.setTitle(title);
                     if (!isBlank(departmentIdStr)) {
-                        departmentId = Long.parseLong(departmentIdStr); // 加固：由 Try-Catch 保護
+                        d.setDepartmentId(Long.parseLong(departmentIdStr));
+                    } else {
+                        d.setDepartmentId(1L); 
                     }
-                    success = dao.createDoctor(username, password, realName, phone, email, title, departmentId);
+                    d.setStatus(1);
+                    success = DoctorDB.insert(d);
                     break;
                 case "admin":
-                    success = dao.createAdmin(username, password, realName, phone, email);
+                    AdminBean a = new AdminBean();
+                    a.setUsername(username);
+                    a.setPassword(password);
+                    a.setRealName(realName);
+                    a.setPhone(phone);
+                    a.setEmail(email);
+                    a.setStatus(1);
+                    success = AdminDB.insert(a);
                     break;
                 default:
                     response.setStatus(HttpServletResponse.SC_BAD_REQUEST);

@@ -13,6 +13,23 @@
         </div>
     </div>
 
+    <!-- Daily Check-in Card -->
+    <div class="glass rounded-3xl p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <i class="fa-solid fa-fingerprint text-4xl text-blue-600"></i>
+                <div>
+                    <h3 class="text-xl font-bold text-gray-800">Daily Check-in</h3>
+                    <p id="checkin-status-text" class="text-sm text-gray-600 mt-1">Not checked in yet. Click the button below.</p>
+                </div>
+            </div>
+            <button id="doctor-checkin-btn" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition shadow-md flex items-center gap-2 justify-center">
+                <i class="fa-solid fa-check-circle"></i> Check In
+            </button>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
     <div class="grid grid-cols-2 xl:grid-cols-4 gap-6">
         <div class="home-card glass rounded-3xl p-6 text-center">
             <i class="fa-solid fa-calendar-days text-blue-600 text-4xl mb-4"></i>
@@ -36,6 +53,7 @@
         </div>
     </div>
 
+    <!-- Quick Actions -->
     <div class="glass rounded-3xl p-6">
         <h3 class="text-xl font-semibold mb-4">Quick Actions</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -62,3 +80,55 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.getElementById('doctor-checkin-btn').addEventListener('click', function() {
+        fetch('<%= request.getContextPath() %>/doctor/checkin', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'action=checkin'
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Checked In',
+                    text: 'Check-in time: ' + data.checkinTime,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                document.getElementById('checkin-status-text').innerHTML = 'Checked in at ' + data.checkinTime;
+                document.getElementById('doctor-checkin-btn').disabled = true;
+                document.getElementById('doctor-checkin-btn').classList.add('opacity-50', 'cursor-not-allowed');
+                document.getElementById('doctor-checkin-btn').innerHTML = '<i class="fa-solid fa-check-circle"></i> Checked In';
+            } else {
+                if (data.alreadyChecked) {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Already Checked In',
+                        text: data.message,
+                        timer: 2000
+                    });
+                    document.getElementById('checkin-status-text').innerHTML = 'Checked in at ' + data.checkinTime;
+                    document.getElementById('doctor-checkin-btn').disabled = true;
+                    document.getElementById('doctor-checkin-btn').classList.add('opacity-50', 'cursor-not-allowed');
+                    document.getElementById('doctor-checkin-btn').innerHTML = '<i class="fa-solid fa-check-circle"></i> Checked In';
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Check-in Failed',
+                        text: data.message
+                    });
+                }
+            }
+        })
+        .catch(err => {
+            Swal.fire({
+                icon: 'error',
+                title: 'Network Error',
+                text: 'Unable to connect to server'
+            });
+        });
+    });
+</script>

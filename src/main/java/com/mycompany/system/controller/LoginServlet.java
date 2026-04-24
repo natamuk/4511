@@ -4,16 +4,18 @@
  */
 package com.mycompany.system.controller;
 
+import com.mycompany.system.bean.AdminBean;
+import com.mycompany.system.bean.DoctorBean;
+import com.mycompany.system.bean.PatientBean;
+import com.mycompany.system.db.AdminDB;
+import com.mycompany.system.db.DoctorDB;
+import com.mycompany.system.db.PatientDB;
 import com.mycompany.system.model.LoginUser;
-import com.mycompany.system.util.DBUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 
 @WebServlet("/login")
 public class LoginServlet extends HttpServlet {
@@ -35,12 +37,32 @@ public class LoginServlet extends HttpServlet {
 
         LoginUser user = null;
 
-        user = loginFromTable("admin", username, password, "admin");
-        if (user == null) {
-            user = loginFromTable("doctor", username, password, "doctor");
-        }
-        if (user == null) {
-            user = loginFromTable("patient", username, password, "patient");
+        // 使用新的 DB 類別進行驗證
+        AdminBean admin = AdminDB.login(username, password);
+        if (admin != null) {
+            user = new LoginUser();
+            user.setId(admin.getId());
+            user.setUsername(admin.getUsername());
+            user.setRealName(admin.getRealName());
+            user.setRole("admin");
+        } else {
+            DoctorBean doctor = DoctorDB.login(username, password);
+            if (doctor != null) {
+                user = new LoginUser();
+                user.setId(doctor.getId());
+                user.setUsername(doctor.getUsername());
+                user.setRealName(doctor.getRealName());
+                user.setRole("doctor");
+            } else {
+                PatientBean patient = PatientDB.login(username, password);
+                if (patient != null) {
+                    user = new LoginUser();
+                    user.setId(patient.getId());
+                    user.setUsername(patient.getUsername());
+                    user.setRealName(patient.getRealName());
+                    user.setRole("patient");
+                }
+            }
         }
 
         if (user != null) {
@@ -66,32 +88,5 @@ public class LoginServlet extends HttpServlet {
             request.setAttribute("errorMsg", "Invalid username or password.");
             request.getRequestDispatcher("/login.jsp").forward(request, response);
         }
-    }
-
-    private LoginUser loginFromTable(String table, String username, String password, String role) {
-        String sql = "SELECT id, username, real_name FROM " + table +
-                     " WHERE username = ? AND password = ? AND status = 1";
-
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setString(1, username);
-            ps.setString(2, password);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    LoginUser user = new LoginUser();
-                    user.setId(rs.getLong("id"));
-                    user.setUsername(rs.getString("username"));
-                    user.setRealName(rs.getString("real_name"));
-                    user.setRole(role);
-                    return user;
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return null;
     }
 }
