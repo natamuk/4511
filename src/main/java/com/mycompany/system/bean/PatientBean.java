@@ -14,6 +14,7 @@ public class PatientBean {
     private String username;
     private String password;
     private String realName;
+    private int gender;
     private String phone;
     private String email;
     private String idCard;
@@ -56,6 +57,15 @@ public class PatientBean {
     public void setRealName(String realName) {
         this.realName = realName;
     }
+
+    public int getGender() {
+        return gender;
+    }
+
+    public void setGender(int gender) {
+        this.gender = gender;
+    }
+    
 
     public String getPhone() {
         return phone;

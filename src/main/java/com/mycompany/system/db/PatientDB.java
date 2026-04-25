@@ -59,20 +59,21 @@ public class PatientDB {
     }
 
     public static boolean insert(PatientBean patient) {
-        String sql = "INSERT INTO patient (username, password, real_name, phone, email, id_card, birthday, address, avatar, balance, status, create_time, update_time) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
+        String sql = "INSERT INTO patient (username, password, real_name, gender, phone, email, id_card, birthday, address, avatar, balance, status, create_time, update_time) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,NOW(), NOW())";
         try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, patient.getUsername());
             ps.setString(2, patient.getPassword());
             ps.setString(3, patient.getRealName());
-            ps.setString(4, patient.getPhone());
-            ps.setString(5, patient.getEmail());
-            ps.setString(6, patient.getIdCard());
-            ps.setObject(7, patient.getBirthday());
-            ps.setString(8, patient.getAddress());
-            ps.setString(9, patient.getAvatar());
-            ps.setBigDecimal(10, patient.getBalance());
-            ps.setInt(11, patient.getStatus());
+            ps.setInt(4, patient.getGender());
+            ps.setString(5, patient.getPhone());
+            ps.setString(6, patient.getEmail());
+            ps.setString(7, patient.getIdCard());
+            ps.setObject(8, patient.getBirthday());
+            ps.setString(9, patient.getAddress());
+            ps.setString(10, patient.getAvatar());
+            ps.setBigDecimal(11, patient.getBalance());
+            ps.setInt(12, patient.getStatus());
             int affected = ps.executeUpdate();
             if (affected > 0) {
                 try (ResultSet rs = ps.getGeneratedKeys()) {
