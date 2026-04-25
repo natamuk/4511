@@ -40,7 +40,7 @@
             <p class="text-gray-500">Monitor clinic operations, appointment trends, and system events</p>
         </div>
         <div class="flex gap-3 flex-wrap items-center">
-            <button onclick="addUser()" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 transition text-white font-medium shadow-sm">Add User</button>
+            <a href="${pageContext.request.contextPath}/admin/contents/add-user.jsp" class="px-4 py-2 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition"> Add User </a>
             <button onclick="loadPage('appointments')" class="px-4 py-2 rounded-xl bg-white border hover:bg-gray-50 transition text-gray-700 font-medium shadow-sm">Appointments</button>
             <button onclick="loadPage('reports')" class="px-4 py-2 rounded-xl bg-white border hover:bg-gray-50 transition text-gray-700 font-medium shadow-sm">View Reports</button>
         </div>

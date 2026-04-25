@@ -23,6 +23,19 @@ import java.util.Map;
 @WebServlet("/admin/user/create")
 public class AdminUserCreateServlet extends HttpServlet {
     private final Gson gson = new Gson();
+    private PatientDB patientDB;
+    private AdminDB adminDB;
+    private DoctorDB doctorDB;
+    
+    @Override
+    public void init() {
+        String dbUrl = "jdbc:mysql://localhost:3306/hospital_system";
+        String dbUser = "root";
+        String dbPassword = "";
+        patientDB = new PatientDB();
+        adminDB = new AdminDB();
+        doctorDB = new DoctorDB();
+    }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)

@@ -41,7 +41,7 @@
     if (clinics == null) clinics = new ArrayList<>();
     if (quota == null) quota = new ArrayList<>();
     if (settings == null) settings = new HashMap<>();
-    
+
 
     String realName = loginUser.getRealName();
     String avatar = "";
@@ -53,6 +53,7 @@
         if (profile.getEmail() != null) email = profile.getEmail();
         if (profile.getPhone() != null) phone = profile.getPhone();
     }
+   
 %>
 <!DOCTYPE html>
 <html lang="en">
