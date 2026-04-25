@@ -4,12 +4,13 @@
     Author     : 123
 --%>
 
+
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <div class="max-w-3xl mx-auto glass rounded-3xl p-8">
     <h3 class="text-2xl font-bold mb-6 text-gray-800 border-b pb-4"><i class="fa-solid fa-user-shield text-gray-400 mr-2"></i>Account Profile</h3>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div class="md:col-span-2 flex items-center gap-6 mb-4">
-            <img src="${avatarJS}" class="w-24 h-24 rounded-full ring-4 ring-indigo-50 object-cover shadow-sm" alt="avatar">
+            <img src="https://picsum.photos/200/200?random=99" class="w-24 h-24 rounded-full ring-4 ring-indigo-50 object-cover shadow-sm" alt="avatar">
             <div>
                 <h4 class="text-xl font-bold text-gray-800">${realNameJS}</h4>
                 <p class="text-sm font-medium text-indigo-600 bg-indigo-50 px-3 py-1 rounded inline-block mt-2">System Administrator</p>
@@ -41,3 +42,4 @@
         </div>
     </div>
 </div>
+     

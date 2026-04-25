@@ -4,6 +4,7 @@
     Author     : 123
 --%>
 
+<%@page import="com.mycompany.system.bean.AdminBean"%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" isELIgnored="false" import="java.util.*, com.mycompany.system.model.LoginUser" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <jsp:useBean id="now" class="java.util.Date" />
@@ -17,7 +18,8 @@
 
     LoginUser loginUser = (LoginUser) userObj;
 
-    Map<String, Object> profile = (Map<String, Object>) request.getAttribute("adminProfile");
+    AdminBean profile = (AdminBean) request.getAttribute("adminProfile");
+    
     List<Map<String, Object>> appointments = (List<Map<String, Object>>) request.getAttribute("appointments");
     List<Map<String, Object>> queueList = (List<Map<String, Object>>) request.getAttribute("queueList");
     List<Map<String, Object>> notifications = (List<Map<String, Object>>) request.getAttribute("notifications");
@@ -29,7 +31,6 @@
     List<Map<String, Object>> quota = (List<Map<String, Object>>) request.getAttribute("quota");
     Map<String, String> settings = (Map<String, String>) request.getAttribute("settings");
 
-    if (profile == null) profile = new HashMap<>();
     if (appointments == null) appointments = new ArrayList<>();
     if (queueList == null) queueList = new ArrayList<>();
     if (notifications == null) notifications = new ArrayList<>();
@@ -40,16 +41,18 @@
     if (clinics == null) clinics = new ArrayList<>();
     if (quota == null) quota = new ArrayList<>();
     if (settings == null) settings = new HashMap<>();
+    
 
     String realName = loginUser.getRealName();
     String avatar = "";
     String email = "";
     String phone = "";
 
-    if (profile.get("realName") != null) realName = String.valueOf(profile.get("realName"));
-    if (profile.get("avatar") != null) avatar = String.valueOf(profile.get("avatar"));
-    if (profile.get("email") != null) email = String.valueOf(profile.get("email"));
-    if (profile.get("phone") != null) phone = String.valueOf(profile.get("phone"));
+      if (profile != null) {
+        if (profile.getRealName() != null) realName = profile.getRealName();
+        if (profile.getEmail() != null) email = profile.getEmail();
+        if (profile.getPhone() != null) phone = profile.getPhone();
+    }
 %>
 <!DOCTYPE html>
 <html lang="en">
