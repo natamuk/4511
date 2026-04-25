@@ -29,7 +29,7 @@
             </h3>
         </div>
 
-        <form action="RegisterServlet" method="post" class="space-y-6" onsubmit="return showSuccess()">
+        <form action="RegisterServlet" method="post" class="space-y-6">
             <div>
                 <label class="block text-sm font-medium text-gray-700">Username</label>
                 <input type="text" name="username" required
@@ -97,18 +97,5 @@
             </div>
         </form>
     </div>
-
-    <script>
-        function showSuccess() {
-            Swal.fire({
-                icon: 'success',
-                title: 'Registration Submitted',
-                text: 'Your patient registration form has been sent!',
-                confirmButtonColor: '#6366f1'
-            });
-            return true; // allow form submission
-        }
-    </script>
-
 </body>
 </html>

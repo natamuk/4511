@@ -52,7 +52,6 @@ public class RegisterServlet extends HttpServlet {
         }
         patient.setAddress(request.getParameter("address"));
 
-        patient.setAvatar("default.png");
         patient.setBalance(BigDecimal.ZERO);
         patient.setStatus(1);
 
@@ -60,6 +59,7 @@ public class RegisterServlet extends HttpServlet {
         if (success) {
             targetURL ="login.jsp";
         } else {
+            request.setAttribute("errorMessage", "Registration failed: username already exists.");
             targetURL="/error/RegisterError.jsp";
         }
 
