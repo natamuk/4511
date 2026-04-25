@@ -37,7 +37,6 @@ public class LoginServlet extends HttpServlet {
 
         LoginUser user = null;
 
-        // 使用新的 DB 類別進行驗證
         AdminBean admin = AdminDB.login(username, password);
         if (admin != null) {
             user = new LoginUser();
@@ -78,7 +77,7 @@ public class LoginServlet extends HttpServlet {
                     response.sendRedirect(request.getContextPath() + "/doctor/dashboard");
                     break;
                 case "patient":
-                    response.sendRedirect(request.getContextPath() + "/patient/home.jsp");
+                    response.sendRedirect(request.getContextPath() + "/patient/dashboard");
                     break;
                 default:
                     response.sendRedirect(request.getContextPath() + "/login.jsp");

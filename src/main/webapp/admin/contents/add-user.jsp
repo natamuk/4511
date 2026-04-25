@@ -12,7 +12,6 @@
         <title>JSP Page</title>
     </head>
     <body>
-       <!-- Add User Modal -->
 <div id="addUserModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
     <div class="bg-white rounded-xl p-8 w-[500px] shadow-lg">
         <h3 class="text-xl font-bold mb-4">Add User</h3>
@@ -28,7 +27,6 @@
                 </select>
             </div>
 
-            <!-- Common Fields -->
             <div class="mb-3">
                 <label class="block text-sm font-medium">Username</label>
                 <input type="text" name="username" class="w-full border rounded p-2"/>
@@ -50,7 +48,6 @@
                 <input type="email" name="email" class="w-full border rounded p-2"/>
             </div>
 
-            <!-- Doctor Fields -->
             <div id="doctorFields" class="hidden">
                 <div class="mb-3">
                     <label class="block text-sm font-medium">Title</label>
@@ -62,7 +59,6 @@
                 </div>
             </div>
 
-            <!-- Patient Fields -->
             <div id="patientFields" class="hidden">
                 <div class="mb-3">
                     <label class="block text-sm font-medium">Address</label>
@@ -70,9 +66,7 @@
                 </div>
             </div>
 
-            <!-- Admin has no extra fields -->
 
-            <!-- Buttons -->
             <div class="flex justify-end gap-3 mt-4">
                 <button type="button" onclick="document.getElementById('addUserModal').classList.add('hidden')" 
                         class="px-4 py-2 bg-gray-300 rounded">Cancel</button>

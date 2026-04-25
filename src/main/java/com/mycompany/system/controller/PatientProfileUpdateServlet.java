@@ -10,7 +10,6 @@ import com.mycompany.system.model.LoginUser;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
-
 import java.io.IOException;
 
 @WebServlet("/patient/update-profile")
@@ -28,7 +27,7 @@ public class PatientProfileUpdateServlet extends HttpServlet {
         String phone = request.getParameter("phone");
         String email = request.getParameter("email");
         String address = request.getParameter("address");
-        String avatar = request.getParameter("avatar");
+        String avatar = request.getParameter("avatar");  // 可从文件上传获得，这里简化
         String oldPwd = request.getParameter("oldPwd");
         String newPwd = request.getParameter("newPwd");
 
@@ -51,7 +50,7 @@ public class PatientProfileUpdateServlet extends HttpServlet {
             updateBean.setPhone(phone);
             updateBean.setEmail(email);
             updateBean.setAddress(address);
-            updateBean.setAvatar(avatar);
+            if (avatar != null) updateBean.setAvatar(avatar);
             if (PatientDB.update(updateBean)) {
                 writeJson(response, 200, true, "Profile updated successfully");
             } else {

@@ -9,11 +9,8 @@ import com.mycompany.system.util.DBUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
-
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.sql.*;
 
 @WebServlet("/patient/toggle-favorite")
 public class PatientToggleFavoriteServlet extends HttpServlet {
@@ -26,33 +23,34 @@ public class PatientToggleFavoriteServlet extends HttpServlet {
         }
 
         Long patientId = ((LoginUser) session.getAttribute("loginUser")).getId();
-        String clinicName = request.getParameter("clinicName");
+        Long clinicId = parseLong(request.getParameter("clinicId"));
 
-        if (clinicName == null || clinicName.trim().isEmpty()) {
-            writeJson(response, 400, false, "Clinic name required");
+        if (clinicId == null) {
+            writeJson(response, 400, false, "Clinic ID required");
             return;
         }
 
         try (Connection conn = DBUtil.getConnection()) {
             boolean exists = false;
-            try (PreparedStatement ps = conn.prepareStatement("SELECT id FROM patient_favorite_clinic WHERE patient_id = ? AND clinic_name = ?")) {
+            try (PreparedStatement ps = conn.prepareStatement("SELECT id FROM patient_favorite_clinic WHERE patient_id = ? AND clinic_id = ?")) {
                 ps.setLong(1, patientId);
-                ps.setString(2, clinicName);
-                ResultSet rs = ps.executeQuery();
-                exists = rs.next();
+                ps.setLong(2, clinicId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    exists = rs.next();
+                }
             }
 
             if (exists) {
-                try (PreparedStatement ps = conn.prepareStatement("DELETE FROM patient_favorite_clinic WHERE patient_id = ? AND clinic_name = ?")) {
+                try (PreparedStatement ps = conn.prepareStatement("DELETE FROM patient_favorite_clinic WHERE patient_id = ? AND clinic_id = ?")) {
                     ps.setLong(1, patientId);
-                    ps.setString(2, clinicName);
+                    ps.setLong(2, clinicId);
                     ps.executeUpdate();
                 }
                 writeJson(response, 200, true, "Removed from favorites");
             } else {
-                try (PreparedStatement ps = conn.prepareStatement("INSERT INTO patient_favorite_clinic (patient_id, clinic_name) VALUES (?, ?)")) {
+                try (PreparedStatement ps = conn.prepareStatement("INSERT INTO patient_favorite_clinic (patient_id, clinic_id) VALUES (?, ?)")) {
                     ps.setLong(1, patientId);
-                    ps.setString(2, clinicName);
+                    ps.setLong(2, clinicId);
                     ps.executeUpdate();
                 }
                 writeJson(response, 200, true, "Added to favorites");
@@ -61,6 +59,10 @@ public class PatientToggleFavoriteServlet extends HttpServlet {
             e.printStackTrace();
             writeJson(response, 500, false, "Server error");
         }
+    }
+
+    private Long parseLong(String v) {
+        try { return Long.parseLong(v); } catch (Exception e) { return null; }
     }
 
     private void writeJson(HttpServletResponse response, int status, boolean success, String message) throws IOException {
