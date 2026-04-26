@@ -34,8 +34,12 @@ public class PatientTableTag extends SimpleTagSupport {
                 out.write("<td>" + p.getEmail() + "</td>");
                 out.write("<td>" + p.getAddress() + "</td>");
                 out.write("<td>" + (p.getStatus() == 1 ? "Active" : "Inactive") + "</td>");
-                out.write("<td><a href='" + contextPath + "/admin/contents/edit.jsp?id=" + p.getId()
-                        + "' class='px-3 py-1 bg-blue-600 text-white rounded'>Edit</a></td>");
+                out.write("<td><a href='" + contextPath + "/admin/contents/edit.jsp?role=patient&id=" + p.getId()
+                        + "' class='px-3 py-1 bg-green-600 text-white rounded'>Edit</a>");
+                out.write("<a href='" + contextPath + "/AbminDeleteServlet?role=patient&id=" + p.getId()
+                        + "' class='px-3 py-1 bg-red-600 text-white rounded' "
+                        + "onclick=\"return confirm('Are you sure you want to delete this doctor?');\">Delete</a>");
+                out.write("</td>");
                 out.write("</tr>");
             }
         }
