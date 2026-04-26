@@ -4,23 +4,13 @@
     Author     : 123
 --%>
 
-<%@ page contentType="text/html;charset=UTF-8" language="java" import="java.util.*,com.google.gson.Gson" %>
-<%
-    List<Map<String, Object>> notifications = (List<Map<String, Object>>) request.getAttribute("notifications");
-    if (notifications == null) notifications = new ArrayList<>();
-    String notificationsJson = new Gson().toJson(notifications);
-%>
-
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <div class="max-w-4xl mx-auto glass rounded-3xl p-8">
     <h3 class="text-2xl font-semibold mb-6">Notifications</h3>
-    <div class="space-y-4" id="notifications-panel">
-        <%-- will be rendered by renderNotifications() --%>
-    </div>
+    <div class="space-y-4" id="notifications-panel"></div>
 </div>
 
 <script>
-    window.notifications = window.notifications || <%= notificationsJson %>;
-
     function escapeHtml(s) {
         if (s === null || s === undefined) return '';
         return String(s).replace(/[&<>"'\/]/g, function (c) {
@@ -28,10 +18,17 @@
         });
     }
 
-    function renderNotifications() {
+    function updateSidebarBadge(count) {
+        var badge = document.getElementById('notifications-badge');
+        if (badge) {
+            badge.innerHTML = count > 0 ? ('<span class="bg-red-500 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full ml-auto">' + count + '</span>') : '';
+        }
+    }
+
+    function renderNotifications(notifications) {
         var panel = document.getElementById('notifications-panel');
         if (!panel) return;
-        var list = window.notifications || [];
+        var list = notifications || [];
         if (!list.length) {
             panel.innerHTML = '<div class="text-center py-12 text-gray-500"><i class="fa-regular fa-bell-slash text-4xl mb-3"></i><p>No notifications</p></div>';
             updateSidebarBadge(0);
@@ -62,15 +59,27 @@
         updateSidebarBadge(list.length);
     }
 
-    function updateSidebarBadge(count) {
-        var badge = document.getElementById('notifications-badge');
-        if (badge) {
-            badge.innerHTML = count > 0 ? ('<span class="bg-red-500 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full ml-auto">' + count + '</span>') : '';
+    function loadNotifications() {
+        var panel = document.getElementById('notifications-panel');
+        if (panel) {
+            panel.innerHTML = '<div class="text-center py-12 text-gray-500"><i class="fa-solid fa-spinner fa-pulse text-2xl"></i><p>Loading...</p></div>';
         }
+        var apiUrl = '<%= request.getContextPath() %>/patient/notifications/json';
+        fetch(apiUrl)
+            .then(function(res) {
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                return res.json();
+            })
+            .then(function(data) {
+                renderNotifications(data);
+            })
+            .catch(function(err) {
+                console.error('Load notifications error:', err);
+                if (panel) {
+                    panel.innerHTML = '<div class="text-center py-12 text-red-500"><i class="fa-regular fa-bell-slash text-4xl mb-3"></i><p>Failed to load notifications.</p></div>';
+                }
+            });
     }
 
-    window.renderNotifications = renderNotifications;
-
-    // initial render
-    renderNotifications();
+    loadNotifications();
 </script>

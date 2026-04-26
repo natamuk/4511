@@ -28,7 +28,9 @@ public class PatientDashboardDao {
                     profile.put("status", rs.getInt("status"));
                 }
             }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return profile;
     }
 
@@ -67,21 +69,18 @@ public class PatientDashboardDao {
                     list.add(row);
                 }
             }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return list;
     }
 
-    /**
-     * 取得合併的最新通知（包含 site-wide notice 與 user_notification for this patient）。
-     * 回傳 format: id, title, message, type, time (Timestamp)
-     */
     public List<Map<String, Object>> getLatestNotices(Long patientId) {
         List<Map<String, Object>> list = new ArrayList<>();
         String userNotifSql = "SELECT id, title, message, type, create_time FROM user_notification WHERE user_type = 3 AND user_id = ? ORDER BY create_time DESC LIMIT 20";
         String globalSql = "SELECT id, title, content AS message, 'info' AS type, publish_time AS create_time FROM notice WHERE status = 1 ORDER BY publish_time DESC LIMIT 20";
 
         try (Connection conn = DBUtil.getConnection()) {
-            // user notifications (personal)
             try (PreparedStatement ps = conn.prepareStatement(userNotifSql)) {
                 ps.setLong(1, patientId);
                 try (ResultSet rs = ps.executeQuery()) {
@@ -97,7 +96,6 @@ public class PatientDashboardDao {
                 }
             }
 
-            // global notices
             try (PreparedStatement ps = conn.prepareStatement(globalSql)) {
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
@@ -112,7 +110,6 @@ public class PatientDashboardDao {
                 }
             }
 
-            // sort by time desc and limit to 10
             list.sort((a, b) -> {
                 Timestamp ta = (Timestamp) a.get("time");
                 Timestamp tb = (Timestamp) b.get("time");
@@ -122,12 +119,31 @@ public class PatientDashboardDao {
                 return tb.compareTo(ta);
             });
 
+            if (list.isEmpty()) {
+                Map<String, Object> defaultNotice = new HashMap<>();
+                defaultNotice.put("id", 0L);
+                defaultNotice.put("title", "Welcome to CCHC");
+                defaultNotice.put("message", "This is a default notification. Your system is working.");
+                defaultNotice.put("type", "info");
+                defaultNotice.put("time", new Timestamp(System.currentTimeMillis()));
+                list.add(defaultNotice);
+            }
+
             if (list.size() > 10) {
                 return new ArrayList<>(list.subList(0, 10));
             }
 
         } catch (Exception e) {
             e.printStackTrace();
+            if (list.isEmpty()) {
+                Map<String, Object> errorNotice = new HashMap<>();
+                errorNotice.put("id", 0L);
+                errorNotice.put("title", "System Notice");
+                errorNotice.put("message", "Unable to load notifications from database. Please contact admin.");
+                errorNotice.put("type", "warning");
+                errorNotice.put("time", new Timestamp(System.currentTimeMillis()));
+                list.add(errorNotice);
+            }
         }
         return list;
     }
@@ -157,7 +173,9 @@ public class PatientDashboardDao {
                     list.add(row);
                 }
             }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return list;
     }
 
@@ -174,7 +192,9 @@ public class PatientDashboardDao {
                 row.put("active", rs.getInt("status") == 1);
                 list.add(row);
             }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return list;
     }
 
@@ -190,7 +210,9 @@ public class PatientDashboardDao {
                 slot.put("capacity", rs.getInt("capacity"));
                 map.computeIfAbsent(clinicId, k -> new ArrayList<>()).add(slot);
             }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return map;
     }
 
@@ -212,7 +234,9 @@ public class PatientDashboardDao {
                     list.add(row);
                 }
             }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return list;
     }
 
@@ -233,7 +257,9 @@ public class PatientDashboardDao {
                     list.add(row);
                 }
             }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return list;
     }
 
