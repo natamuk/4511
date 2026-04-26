@@ -146,4 +146,25 @@ public class DoctorDB {
         }
         return d;
     }
+
+    public static boolean deleteById(Long id) {
+        boolean deleted = false;
+        try (Connection conn = DBUtil.getConnection()) {
+  
+            try (PreparedStatement ps1 = conn.prepareStatement("DELETE FROM schedule WHERE doctor_id = ?")) {
+                ps1.setLong(1, id);
+                ps1.executeUpdate();
+            }
+
+            try (PreparedStatement ps2 = conn.prepareStatement("DELETE FROM doctor WHERE id = ?")) {
+                ps2.setLong(1, id);
+                int rows = ps2.executeUpdate();
+                deleted = (rows > 0);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return deleted;
+    }
+
 }

@@ -175,4 +175,22 @@ public class PatientDB {
         }
         return p;
     }
+    
+    
+    public static boolean deleteById(Long id) {
+        boolean deleted = false;
+        String sql = "DELETE FROM patient WHERE id = ?";
+
+        try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setLong(1, id);
+            int rows = ps.executeUpdate();
+            deleted = (rows > 0);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return deleted;
+    }
 }
