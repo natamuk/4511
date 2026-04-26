@@ -28,9 +28,7 @@ public class PatientDashboardDao {
                     profile.put("status", rs.getInt("status"));
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        } catch (Exception e) { e.printStackTrace(); }
         return profile;
     }
 
@@ -69,9 +67,7 @@ public class PatientDashboardDao {
                     list.add(row);
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        } catch (Exception e) { e.printStackTrace(); }
         return list;
     }
 
@@ -89,9 +85,7 @@ public class PatientDashboardDao {
                 row.put("time", rs.getTimestamp("publish_time"));
                 list.add(row);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        } catch (Exception e) { e.printStackTrace(); }
         return list;
     }
 
@@ -120,9 +114,7 @@ public class PatientDashboardDao {
                     list.add(row);
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        } catch (Exception e) { e.printStackTrace(); }
         return list;
     }
 
@@ -139,9 +131,7 @@ public class PatientDashboardDao {
                 row.put("active", rs.getInt("status") == 1);
                 list.add(row);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        } catch (Exception e) { e.printStackTrace(); }
         return list;
     }
 
@@ -157,9 +147,7 @@ public class PatientDashboardDao {
                 slot.put("capacity", rs.getInt("capacity"));
                 map.computeIfAbsent(clinicId, k -> new ArrayList<>()).add(slot);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        } catch (Exception e) { e.printStackTrace(); }
         return map;
     }
 
@@ -181,9 +169,7 @@ public class PatientDashboardDao {
                     list.add(row);
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        } catch (Exception e) { e.printStackTrace(); }
         return list;
     }
 
@@ -204,28 +190,76 @@ public class PatientDashboardDao {
                     list.add(row);
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        } catch (Exception e) { e.printStackTrace(); }
         return list;
     }
 
     private String regStatusToText(int status) {
         switch (status) {
-            case 1:
-                return "Booked";
-            case 2:
-                return "Cancelled";
-            case 3:
-                return "Called";
-            case 4:
-                return "Consulting";
-            case 5:
-                return "Completed";
-            case 6:
-                return "Transferred";
-            default:
-                return "Unknown";
+            case 1: return "Booked";
+            case 2: return "Cancelled";
+            case 3: return "Called";
+            case 4: return "Consulting";
+            case 5: return "Completed";
+            case 6: return "Transferred";
+            default: return "Unknown";
         }
+    }
+
+    public Map<String, String> getSettings() {
+        Map<String, String> settings = new HashMap<>();
+        String sql = "SELECT setting_key, setting_value FROM system_setting";
+        try (Connection conn = DBUtil.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                settings.put(rs.getString("setting_key"), rs.getString("setting_value"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        settings.putIfAbsent("same_day_queue_enabled", "0");
+        settings.putIfAbsent("walkin_enabled_clinics", "");
+        return settings;
+    }
+
+    public boolean isWalkinQueueEnabled() {
+        Map<String, String> settings = getSettings();
+        return "1".equals(settings.getOrDefault("same_day_queue_enabled", "0"));
+    }
+
+    public Set<Long> getWalkinEnabledClinicIds() {
+        Map<String, String> settings = getSettings();
+        String ids = settings.getOrDefault("walkin_enabled_clinics", "");
+        Set<Long> result = new HashSet<>();
+        if (ids != null && !ids.isEmpty()) {
+            for (String id : ids.split(",")) {
+                try {
+                    result.add(Long.parseLong(id.trim()));
+                } catch (NumberFormatException ignored) {}
+            }
+        }
+        return result;
+    }
+
+    public List<Map<String, Object>> getAvailableWalkinClinics() {
+        List<Map<String, Object>> result = new ArrayList<>();
+        if (!isWalkinQueueEnabled()) return result;
+
+        Set<Long> allowedIds = getWalkinEnabledClinicIds();
+        if (allowedIds.isEmpty()) return result;
+
+        List<Map<String, Object>> allClinics = getClinics();
+        for (Map<String, Object> clinic : allClinics) {
+            Long id = (Long) clinic.get("id");
+            if (allowedIds.contains(id)) {
+                Map<String, Object> simplified = new HashMap<>();
+                simplified.put("id", id);
+                simplified.put("name", clinic.get("name"));
+                simplified.put("location", clinic.get("location"));
+                result.add(simplified);
+            }
+        }
+        return result;
     }
 }

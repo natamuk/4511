@@ -43,10 +43,12 @@ public class PatientDashboardServlet extends HttpServlet {
 
         List<Map<String, Object>> clinics = dao.getClinics();
         Map<Long, List<Map<String, Object>>> clinicSlots = dao.getClinicSlots();
+        request.setAttribute("clinicsJson", new Gson().toJson(clinics));
+        request.setAttribute("clinicSlotsJson", new Gson().toJson(clinicSlots));
 
-        Gson gson = new Gson();
-        request.setAttribute("clinicsJson", gson.toJson(clinics));
-        request.setAttribute("clinicSlotsJson", gson.toJson(clinicSlots));
+        boolean queueEnabled = dao.isWalkinQueueEnabled();
+        request.setAttribute("sameDayQueueEnabled", queueEnabled);
+        request.setAttribute("availableWalkinClinicsJson", new Gson().toJson(dao.getAvailableWalkinClinics()));
 
         request.getRequestDispatcher("/patient/home.jsp").forward(request, response);
     }

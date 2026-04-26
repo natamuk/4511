@@ -4,14 +4,21 @@
  */
 package com.mycompany.system.controller;
 
+import com.mycompany.system.dao.PatientDashboardDao;
 import com.mycompany.system.model.LoginUser;
 import com.mycompany.system.util.DBUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.*;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.Set;
 
 @WebServlet("/patient/queue/join")
 public class PatientQueueJoinServlet extends HttpServlet {
@@ -36,26 +43,26 @@ public class PatientQueueJoinServlet extends HttpServlet {
             return;
         }
 
-        // 只開放：1柴灣 2將軍澳 3沙田
-        if (!(clinicId == 1L || clinicId == 2L || clinicId == 3L)) {
-            writeJson(response, HttpServletResponse.SC_FORBIDDEN, false, "This clinic does not support queue join");
+        PatientDashboardDao dao = new PatientDashboardDao();
+        if (!dao.isWalkinQueueEnabled()) {
+            writeJson(response, HttpServletResponse.SC_FORBIDDEN, false, "Walk-in queue is disabled by administrator");
             return;
         }
 
-        String checkAlreadyWaitingSql =
-                "SELECT id FROM queue WHERE patient_id = ? AND status = 'waiting' LIMIT 1";
+        Set<Long> allowedClinics = dao.getWalkinEnabledClinicIds();
+        if (!allowedClinics.contains(clinicId)) {
+            writeJson(response, HttpServletResponse.SC_FORBIDDEN, false, "This clinic does not allow walk-in queue at this time");
+            return;
+        }
 
-        String nextNoSql =
-                "SELECT COALESCE(MAX(CAST(SUBSTRING(queue_no, 2) AS UNSIGNED)), 0) + 1 AS next_no " +
-                "FROM queue WHERE clinic_id = ? AND DATE(created_time) = CURDATE()";
-
-        String insertSql =
-                "INSERT INTO queue (patient_id, doctor_id, clinic_id, queue_no, status, created_time, updated_time) " +
-                "VALUES (?, NULL, ?, ?, 'waiting', NOW(), NOW())";
+        String checkAlreadyWaitingSql = "SELECT id FROM queue WHERE patient_id = ? AND status = 'waiting' LIMIT 1";
+        String nextNoSql = "SELECT COALESCE(MAX(CAST(SUBSTRING(queue_no, 2) AS UNSIGNED)), 0) + 1 AS next_no " +
+                           "FROM queue WHERE clinic_id = ? AND DATE(created_time) = CURDATE()";
+        String insertSql = "INSERT INTO queue (patient_id, doctor_id, clinic_id, queue_no, status, created_time, updated_time) " +
+                           "VALUES (?, NULL, ?, ?, 'waiting', NOW(), NOW())";
 
         try (Connection conn = DBUtil.getConnection()) {
             conn.setAutoCommit(false);
-
             try {
                 try (PreparedStatement ps = conn.prepareStatement(checkAlreadyWaitingSql)) {
                     ps.setLong(1, patientId);
@@ -76,7 +83,8 @@ public class PatientQueueJoinServlet extends HttpServlet {
                     }
                 }
 
-                String queueNo = "Q" + String.format("%03d", nextNo);
+                String queueNo = "Q" + new java.text.SimpleDateFormat("yyyyMMdd").format(new java.util.Date()) +
+                                 String.format("%03d", nextNo);
 
                 try (PreparedStatement ps = conn.prepareStatement(insertSql)) {
                     ps.setLong(1, patientId);
@@ -94,7 +102,6 @@ public class PatientQueueJoinServlet extends HttpServlet {
             } finally {
                 conn.setAutoCommit(true);
             }
-
         } catch (Exception e) {
             e.printStackTrace();
             writeJson(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, false, "Server error");
