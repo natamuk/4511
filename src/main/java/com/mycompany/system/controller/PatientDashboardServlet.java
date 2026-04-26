@@ -33,7 +33,9 @@ public class PatientDashboardServlet extends HttpServlet {
         PatientDashboardDao dao = new PatientDashboardDao();
 
         request.setAttribute("patientProfile", dao.getPatientProfile(patientId));
-        request.setAttribute("notifications", dao.getLatestNotices(patientId));
+        List<Map<String, Object>> notifications = dao.getLatestNotices(patientId);
+        request.setAttribute("notifications", notifications);
+        request.setAttribute("notificationsJson", new Gson().toJson(notifications));
         request.setAttribute("records", dao.getRecentMedicalRecords(patientId));
         request.setAttribute("queue", dao.getQueueTickets(patientId));
         request.setAttribute("favorites", dao.getFavorites(patientId));

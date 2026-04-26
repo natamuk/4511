@@ -71,21 +71,64 @@ public class PatientDashboardDao {
         return list;
     }
 
+    /**
+     * 取得合併的最新通知（包含 site-wide notice 與 user_notification for this patient）。
+     * 回傳 format: id, title, message, type, time (Timestamp)
+     */
     public List<Map<String, Object>> getLatestNotices(Long patientId) {
-        String sql = "SELECT id, title, content, publish_time FROM notice WHERE status = 1 ORDER BY publish_time DESC, create_time DESC LIMIT 5";
         List<Map<String, Object>> list = new ArrayList<>();
-        try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                Map<String, Object> row = new HashMap<>();
-                row.put("id", rs.getLong("id"));
-                row.put("title", rs.getString("title"));
-                row.put("message", rs.getString("content"));
-                row.put("type", "info");
-                row.put("read", false);
-                row.put("time", rs.getTimestamp("publish_time"));
-                list.add(row);
+        String userNotifSql = "SELECT id, title, message, type, create_time FROM user_notification WHERE user_type = 3 AND user_id = ? ORDER BY create_time DESC LIMIT 20";
+        String globalSql = "SELECT id, title, content AS message, 'info' AS type, publish_time AS create_time FROM notice WHERE status = 1 ORDER BY publish_time DESC LIMIT 20";
+
+        try (Connection conn = DBUtil.getConnection()) {
+            // user notifications (personal)
+            try (PreparedStatement ps = conn.prepareStatement(userNotifSql)) {
+                ps.setLong(1, patientId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        Map<String, Object> r = new HashMap<>();
+                        r.put("id", rs.getLong("id"));
+                        r.put("title", rs.getString("title"));
+                        r.put("message", rs.getString("message"));
+                        r.put("type", rs.getString("type") != null ? rs.getString("type") : "info");
+                        r.put("time", rs.getTimestamp("create_time"));
+                        list.add(r);
+                    }
+                }
             }
-        } catch (Exception e) { e.printStackTrace(); }
+
+            // global notices
+            try (PreparedStatement ps = conn.prepareStatement(globalSql)) {
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        Map<String, Object> r = new HashMap<>();
+                        r.put("id", rs.getLong("id"));
+                        r.put("title", rs.getString("title"));
+                        r.put("message", rs.getString("message"));
+                        r.put("type", rs.getString("type") != null ? rs.getString("type") : "info");
+                        r.put("time", rs.getTimestamp("create_time"));
+                        list.add(r);
+                    }
+                }
+            }
+
+            // sort by time desc and limit to 10
+            list.sort((a, b) -> {
+                Timestamp ta = (Timestamp) a.get("time");
+                Timestamp tb = (Timestamp) b.get("time");
+                if (ta == null && tb == null) return 0;
+                if (ta == null) return 1;
+                if (tb == null) return -1;
+                return tb.compareTo(ta);
+            });
+
+            if (list.size() > 10) {
+                return new ArrayList<>(list.subList(0, 10));
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return list;
     }
 
@@ -162,8 +205,8 @@ public class PatientDashboardDao {
                 while (rs.next()) {
                     Map<String, Object> row = new HashMap<>();
                     row.put("id", rs.getLong("id"));
-                    row.put("ticketNo", rs.getString("queue_no"));
-                    row.put("date", rs.getTimestamp("created_time"));
+                    row.put("queueNo", rs.getString("queue_no"));
+                    row.put("createdTime", rs.getTimestamp("created_time"));
                     row.put("status", rs.getString("status"));
                     row.put("clinic", rs.getString("clinic_name"));
                     list.add(row);

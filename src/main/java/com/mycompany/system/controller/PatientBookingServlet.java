@@ -167,6 +167,15 @@ public class PatientBookingServlet extends HttpServlet {
                 }
             }
 
+            // Insert user notification for booking success (so user will see personal notification)
+            String insertNotifSql = "INSERT INTO user_notification (user_id, user_type, title, message, type, is_read, create_time) VALUES (?, 3, ?, ?, 'success', 0, NOW())";
+            try (PreparedStatement ps = conn.prepareStatement(insertNotifSql)) {
+                ps.setLong(1, patientId);
+                ps.setString(2, "Booking Confirmed");
+                ps.setString(3, "Your booking " + regNo + " on " + regDate + " has been confirmed.");
+                ps.executeUpdate();
+            }
+
             conn.commit();
             writeJson(response, HttpServletResponse.SC_OK, true, "Booking completed successfully");
 

@@ -56,10 +56,12 @@ public class PatientQueueJoinServlet extends HttpServlet {
         }
 
         String checkAlreadyWaitingSql = "SELECT id FROM queue WHERE patient_id = ? AND status = 'waiting' LIMIT 1";
-        String nextNoSql = "SELECT COALESCE(MAX(CAST(SUBSTRING(queue_no, 2) AS UNSIGNED)), 0) + 1 AS next_no " +
+        String nextNoSql = "SELECT COALESCE(MAX(CAST(SUBSTRING(queue_no,10) AS UNSIGNED)), 0) + 1 AS next_no " +
                            "FROM queue WHERE clinic_id = ? AND DATE(created_time) = CURDATE()";
         String insertSql = "INSERT INTO queue (patient_id, doctor_id, clinic_id, queue_no, status, created_time, updated_time) " +
                            "VALUES (?, NULL, ?, ?, 'waiting', NOW(), NOW())";
+
+        String insertNotifSql = "INSERT INTO user_notification (user_id, user_type, title, message, type, is_read, create_time) VALUES (?, ?, ?, ?, ?, 0, NOW())";
 
         try (Connection conn = DBUtil.getConnection()) {
             conn.setAutoCommit(false);
@@ -93,8 +95,19 @@ public class PatientQueueJoinServlet extends HttpServlet {
                     ps.executeUpdate();
                 }
 
+                try (PreparedStatement nps = conn.prepareStatement(insertNotifSql)) {
+                    String title = "Joined Walk-in Queue";
+                    String message = "You joined the walk-in queue: " + queueNo;
+                    nps.setLong(1, patientId);
+                    nps.setInt(2, 3); 
+                    nps.setString(3, title);
+                    nps.setString(4, message);
+                    nps.setString(5, "success");
+                    nps.executeUpdate();
+                }
+
                 conn.commit();
-                writeJson(response, HttpServletResponse.SC_OK, true, "Queue joined: " + queueNo);
+                writeJsonWithQueue(response, HttpServletResponse.SC_OK, true, "Queue joined: " + queueNo, queueNo);
 
             } catch (Exception ex) {
                 conn.rollback();
@@ -116,6 +129,12 @@ public class PatientQueueJoinServlet extends HttpServlet {
         response.setStatus(status);
         response.setContentType("application/json;charset=UTF-8");
         response.getWriter().write("{\"success\":" + success + ",\"message\":\"" + escapeJson(message) + "\"}");
+    }
+
+    private void writeJsonWithQueue(HttpServletResponse response, int status, boolean success, String message, String queueNo) throws IOException {
+        response.setStatus(status);
+        response.setContentType("application/json;charset=UTF-8");
+        response.getWriter().write("{\"success\":" + success + ",\"message\":\"" + escapeJson(message) + "\",\"queueNo\":\"" + escapeJson(queueNo) + "\"}");
     }
 
     private String escapeJson(String s) {

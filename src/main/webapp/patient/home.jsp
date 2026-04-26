@@ -178,8 +178,7 @@
         clinicSlots: <%= request.getAttribute("clinicSlotsJson") != null ? request.getAttribute("clinicSlotsJson") : "{}"%>
     };
     window.appointmentsData = <%= request.getAttribute("appointmentsJson") != null ? request.getAttribute("appointmentsJson") : "[]"%>;
-
-    // 注入現場掛號相關全域變數
+    window.notifications = <%= request.getAttribute("notificationsJson") != null ? request.getAttribute("notificationsJson") : "[]" %>;
     window.sameDayQueueEnabled = <%= request.getAttribute("sameDayQueueEnabled") != null ? request.getAttribute("sameDayQueueEnabled") : false%>;
     window.availableWalkinClinics = <%= request.getAttribute("availableWalkinClinicsJson") != null ? request.getAttribute("availableWalkinClinicsJson") : "[]"%>;
 
