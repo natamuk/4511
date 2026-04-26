@@ -15,7 +15,6 @@
 <%@page import="com.mycompany.system.bean.DoctorBean" %>
 <%@page import="com.mycompany.system.bean.PatientBean" %>
 
-
 <%
 
     List<DoctorBean> doctorList = DoctorDB.getAll();
@@ -36,7 +35,6 @@
                    class="px-4 py-2 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition">
                     Add User
                 </a>
-                <span id="doc-count" class="text-sm font-medium px-3 py-2 bg-indigo-50 text-indigo-700 rounded-xl">Total:</span>
             </div>
         </div>
         <form method="get">
@@ -45,8 +43,6 @@
                 <input type="text" name="docSearchInput" placeholder="Search by name / phone / email..."
                        class="w-full md:w-1/2 px-4 py-3 border rounded-xl outline-none">
                 <button type="submit">Search</button>
-
-                <!--            <input type="text" id="docSearchInput" placeholder="Search by name / phone / email..." class="w-full md:w-1/2 px-4 py-3 border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm" oninput="filterDoctors()">-->
             </div>
             <div class="overflow-x-auto">
                 <base href="${pageContext.request.contextPath}/" />
@@ -57,7 +53,6 @@
     <div class="glass rounded-3xl p-8">
         <div class="flex items-center justify-between mb-6 border-b pb-4">
             <h3 class="text-2xl font-semibold text-gray-800">Patient Management</h3>
-            <span id="pat-count" class="text-sm font-medium px-3 py-1 bg-emerald-50 text-emerald-700 rounded-lg">Total: </span>
         </div>
         <form method="get">
             <div class="mb-6">
@@ -65,7 +60,7 @@
                        class="w-full md:w-1/2 px-4 py-3 border rounded-xl outline-none">
                 <button type="submit">Search</button>
 
-                <!--            <input type="text" id="patSearchInput" placeholder="Search by name / phone / email..." class="w-full md:w-1/2 px-4 py-3 border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm" oninput="filterPatients()">-->
+                
             </div>
         </form>
         <div class="overflow-x-auto">
