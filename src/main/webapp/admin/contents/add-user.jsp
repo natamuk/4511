@@ -1,6 +1,6 @@
 <%-- 
-    Document   : Adduse
-    Created on : 2026年4月25日, 下午8:16:27
+    Document   : add-user
+    Created on : 2026年4月25日
     Author     : USER
 --%>
 
@@ -9,87 +9,190 @@
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <title>JSP Page</title>
+        <title>Add User</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                background-color: #c5e0fa;
+                margin: 0;
+                padding: 0;
+            }
+            .hidden {
+                display: none;
+            }
+            .modal-overlay {
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .modal-box {
+                background: #fff;
+                border-radius: 12px;
+                padding: 2rem;
+                width: 500px;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            }
+            h3 {
+                font-size: 1.25rem;
+                font-weight: bold;
+                margin-bottom: 1rem;
+            }
+            label {
+                display: block;
+                font-size: 0.9rem;
+                font-weight: 500;
+                margin-bottom: 0.25rem;
+            }
+            input, select {
+                width: 100%;
+                border: 1px solid #d1d5db;
+                border-radius: 6px;
+                padding: 0.5rem;
+                font-size: 0.9rem;
+            }
+            .mb-3 {
+                margin-bottom: 1rem;
+            }
+            .mb-4 {
+                margin-bottom: 1.25rem;
+            }
+            .btn {
+                padding: 0.5rem 1rem;
+                border-radius: 6px;
+                font-size: 0.9rem;
+                cursor: pointer;
+                border: none;
+            }
+            .btn-back {
+                background: #e5e7eb;
+                color: #111827;
+            }
+            .btn-save {
+                background: #4f46e5;
+                color: #fff;
+            }
+            .btn-back:hover {
+                background: #d1d5db;
+            }
+            .btn-save:hover {
+                background: #4338ca;
+            }
+            .flex {
+                display: flex;
+            }
+            .gap-3 {
+                gap: 0.75rem;
+            }
+            .mt-4 {
+                margin-top: 1rem;
+            }
+            .justify-end {
+                justify-content: flex-end;
+            }
+        </style>
     </head>
     <body>
-<div id="addUserModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-    <div class="bg-white rounded-xl p-8 w-[500px] shadow-lg">
-        <h3 class="text-xl font-bold mb-4">Add User</h3>
-        <form action="/admin/user/create" method="post">
+        <div id="addUserModal" class="modal-overlay">
+            <div class="modal-box">
+                <h3>Add User</h3>
 
-            <!-- Role Selection -->
-            <div class="mb-4">
-                <label class="block text-sm font-medium">Role</label>
-                <select name="type" id="userRole" class="w-full border rounded p-2" onchange="toggleRoleFields()">
-                    <option value="patient">Patient</option>
-                    <option value="doctor">Doctor</option>
-                    <option value="admin">Admin</option>
-                </select>
-            </div>
-
-            <div class="mb-3">
-                <label class="block text-sm font-medium">Username</label>
-                <input type="text" name="username" class="w-full border rounded p-2"/>
-            </div>
-            <div class="mb-3">
-                <label class="block text-sm font-medium">Password</label>
-                <input type="password" name="password" class="w-full border rounded p-2"/>
-            </div>
-            <div class="mb-3">
-                <label class="block text-sm font-medium">Full Name</label>
-                <input type="text" name="realName" class="w-full border rounded p-2"/>
-            </div>
-            <div class="mb-3">
-                <label class="block text-sm font-medium">Phone</label>
-                <input type="text" name="phone" class="w-full border rounded p-2"/>
-            </div>
-            <div class="mb-3">
-                <label class="block text-sm font-medium">Email</label>
-                <input type="email" name="email" class="w-full border rounded p-2"/>
-            </div>
-
-            <div id="doctorFields" class="hidden">
-                <div class="mb-3">
-                    <label class="block text-sm font-medium">Title</label>
-                    <input type="text" name="title" class="w-full border rounded p-2"/>
+                <% if (request.getAttribute("error") != null) {%>
+                <div style="background-color:#fee2e2; color:#b91c1c; padding:10px; border-radius:6px; margin-bottom:15px;">
+                    <%= request.getAttribute("error")%>
                 </div>
-                <div class="mb-3">
-                    <label class="block text-sm font-medium">Department ID</label>
-                    <input type="text" name="departmentId" class="w-full border rounded p-2"/>
-                </div>
+                <% }%>
+
+
+                <form action="<%= request.getContextPath()%>/AdminCreateUserServlet" method="post">
+
+                    <!-- Role Selection -->
+                    <div class="mb-4">
+                        <label>Role</label>
+                        <select name="type" id="userRole" onchange="toggleRoleFields()" required>
+                            <option value="" disabled selected>Select role</option>
+                            <option value="patient">Patient</option>
+                            <option value="doctor">Doctor</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+
+                    <!-- Common Fields -->
+                    <div class="mb-3">
+                        <label>Username</label>
+                        <input type="text" name="username" required/>
+                    </div>
+                    <div class="mb-3">
+                        <label>Password</label>
+                        <input type="password" name="password" required/>
+                    </div>
+                    <div class="mb-3">
+                        <label>Full Name</label>
+                        <input type="text" name="realName" required/>
+                    </div>
+                    <div class="mb-3">
+                        <label>Phone</label>
+                        <input type="text" name="phone" required/>
+                    </div>
+                    <div class="mb-3">
+                        <label>Email</label>
+                        <input type="email" name="email" required/>
+                    </div>
+
+                    <!-- Doctor Fields -->
+                    <div id="doctorFields" class="hidden">
+                        <div class="mb-3">
+                            <label>Title</label>
+                            <input type="text" name="title"/>
+                        </div>
+                        <div class="mb-3">
+                            <label>Department</label>
+                            <select name="departmentId">
+                                <option value="1">Internal Medicine</option>
+                                <option value="2">Surgery</option>
+                                <option value="3">Pediatrics</option>
+                                <option value="4">Gynecology</option>
+                                <option value="5">Dermatology</option>
+                                <option value="6">ENT</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Patient Fields -->
+                    <div id="patientFields" class="hidden">
+                        <div class="mb-3">
+                            <label>Address</label>
+                            <input type="text" name="address"/>
+                        </div>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="flex justify-end gap-3 mt-4">
+                        <button type="button" 
+                                onclick="window.location.href = '<%= request.getContextPath()%>/admin/dashboard'" 
+                                class="btn btn-back">
+                            Back
+                        </button>
+                        <button type="submit" class="btn btn-save">Save</button>
+                    </div>
+                </form>
             </div>
+        </div>
 
-            <div id="patientFields" class="hidden">
-                <div class="mb-3">
-                    <label class="block text-sm font-medium">Address</label>
-                    <input type="text" name="address" class="w-full border rounded p-2"/>
-                </div>
-            </div>
+        <script>
+            function toggleRoleFields() {
+                const role = document.getElementById("userRole").value;
+                document.getElementById("doctorFields").classList.add("hidden");
+                document.getElementById("patientFields").classList.add("hidden");
 
-
-            <div class="flex justify-end gap-3 mt-4">
-                <button type="button" onclick="document.getElementById('addUserModal').classList.add('hidden')" 
-                        class="px-4 py-2 bg-gray-300 rounded">Cancel</button>
-                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded">Save</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<script>
-    function addUser() {
-        document.getElementById('addUserModal').classList.remove('hidden');
-    }
-    function toggleRoleFields() {
-        const role = document.getElementById("userRole").value;
-        document.getElementById("doctorFields").classList.add("hidden");
-        document.getElementById("patientFields").classList.add("hidden");
-
-        if (role === "doctor") {
-            document.getElementById("doctorFields").classList.remove("hidden");
-        } else if (role === "patient") {
-            document.getElementById("patientFields").classList.remove("hidden");
-        }
-    }
+                if (role === "doctor") {
+                    document.getElementById("doctorFields").classList.remove("hidden");
+                } else if (role === "patient") {
+                    document.getElementById("patientFields").classList.remove("hidden");
+                }
+            }
+        </script>
     </body>
 </html>

@@ -12,10 +12,10 @@
     PatientBean patient = null;
 
     if (idParam != null && idParam.matches("\\d+")) {
-        Long id = Long.parseLong(idParam);   
+        Long id = Long.parseLong(idParam);
 
         if ("doctor".equalsIgnoreCase(roleParam)) {
-            doctor = DoctorDB.getById(id);  
+            doctor = DoctorDB.getById(id);
         } else if ("patient".equalsIgnoreCase(roleParam)) {
             patient = PatientDB.getById(id);
         }
@@ -55,10 +55,18 @@
                 <option value="1" <%= patient.getStatus() == 1 ? "selected" : ""%>>Active</option>
                 <option value="0" <%= patient.getStatus() == 0 ? "selected" : ""%>>Inactive</option>
             </select><br/>
+            
+            <button type="button" 
+                    onclick="window.location.href = '<%= request.getContextPath()%>/admin/dashboard'" 
+                    class="px-4 py-2 bg-gray-300 rounded">
+                Back
+            </button>
             <button type="submit">Save</button>
         </form>
         <% } else { %>
         <p>User not found.</p>
         <% }%>
+
+
     </body>
 </html>
