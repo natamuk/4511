@@ -192,11 +192,10 @@ public class AdminDashboardDao {
             e.printStackTrace();
         }
 
-        // 2) 補一份從 registration 推導的異常資料：頻繁取消 / no-show
+        // 2) 補一份從 registration 推導的異常資料：頻繁取消
         String sql2 =
                 "SELECT p.id AS patient_id, p.real_name AS patient_name, " +
                 "SUM(CASE WHEN r.status = 2 THEN 1 ELSE 0 END) AS cancelled_count, " +
-                "SUM(CASE WHEN r.status = 5 THEN 0 ELSE 0 END) AS dummy_count, " +
                 "MAX(r.update_time) AS last_update " +
                 "FROM registration r " +
                 "JOIN patient p ON r.patient_id = p.id " +
@@ -224,10 +223,9 @@ public class AdminDashboardDao {
             e.printStackTrace();
         }
 
-        // 3) 補一份從 registration 推導的異常資料：頻繁失約
+        // 3) 補一份從 registration 推導的異常資料：頻繁預約但未完成（簡單統計）
         String sql3 =
                 "SELECT p.id AS patient_id, p.real_name AS patient_name, " +
-                "SUM(CASE WHEN r.status = 6 OR r.status = 2 THEN 0 ELSE 0 END) AS dummy_count, " +
                 "COUNT(*) AS total_count, MAX(r.update_time) AS last_update " +
                 "FROM registration r " +
                 "JOIN patient p ON r.patient_id = p.id " +
@@ -242,9 +240,9 @@ public class AdminDashboardDao {
             while (rs.next()) {
                 Map<String, Object> row = new HashMap<>();
                 row.put("id", "no-show-" + rs.getLong("patient_id"));
-                row.put("type", "Frequent No-show");
-                row.put("title", "Frequent No-show");
-                row.put("detail", rs.getString("patient_name") + " may have repeated no-show behavior.");
+                row.put("type", "High Activity");
+                row.put("title", "High Activity");
+                row.put("detail", rs.getString("patient_name") + " has many registrations, please review.");
                 row.put("doctor", "");
                 row.put("clinic", "");
                 row.put("status", "Open");
@@ -530,6 +528,45 @@ public class AdminDashboardDao {
         }
     }
 
+    // ==================== 新增加的方法（用于 AdminQueueServlet） ====================
+
+    /**
+     * 检查是否启用现场挂号（同天排队）功能
+     * 读取系统设置 same_day_queue_enabled，默认为 "1" 表示启用
+     */
+    public boolean isWalkinQueueEnabled() {
+        Map<String, String> settings = getSettings();
+        String value = settings.getOrDefault("same_day_queue_enabled", "1");
+        return "1".equals(value) || "true".equalsIgnoreCase(value);
+    }
+
+    /**
+     * 获取可用于现场挂号的诊所列表
+     * 返回所有 status = 1 的诊所（可根据业务需要增加其他条件）
+     */
+    public List<Map<String, Object>> getAvailableWalkinClinics() {
+        String sql = "SELECT id, clinic_name, location, description, status FROM clinic WHERE status = 1 ORDER BY sort_num ASC";
+        List<Map<String, Object>> list = new ArrayList<>();
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Map<String, Object> row = new HashMap<>();
+                row.put("id", rs.getLong("id"));
+                row.put("name", rs.getString("clinic_name"));
+                row.put("location", rs.getString("location"));
+                row.put("description", rs.getString("description"));
+                row.put("status", rs.getInt("status"));
+                list.add(row);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    // ==================== 保持原有的辅助方法 ====================
+
     private String statusToText(int status) {
         switch (status) {
             case 1: return "pending";
@@ -562,7 +599,7 @@ public class AdminDashboardDao {
         }
     }
 
-    // ==================== 新增/更新/停用 方法 ====================
+    // ==================== 诊所管理、配额更新、用户更新、预约改期等 ====================
 
     public boolean createClinic(String name, String address, String phone) {
         String sql = "INSERT INTO clinic (clinic_name, location, description, status, create_time) VALUES (?, ?, ?, 1, NOW())";
@@ -606,7 +643,6 @@ public class AdminDashboardDao {
     }
 
     public boolean updateQuota(Long id, int capacity, String service) {
-        // 假設配額存在於 schedule 表，欄位名為 max_count
         String sql = "UPDATE schedule SET max_count = ? WHERE id = ?";
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {

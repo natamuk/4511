@@ -7,8 +7,8 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import java.io.IOException;
 
-@WebServlet("/admin/notifications")
-public class AdminNotificationsServlet extends HttpServlet {
+@WebServlet("/admin/queue")
+public class AdminQueueServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -18,9 +18,10 @@ public class AdminNotificationsServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/login.jsp");
             return;
         }
-        LoginUser user = (LoginUser) session.getAttribute("loginUser");
         AdminDashboardDao dao = new AdminDashboardDao();
-        request.setAttribute("notifications", dao.getNotifications(user.getId()));
-        request.getRequestDispatcher("/admin/notifications.jsp").forward(request, response);
+        request.setAttribute("queueList", dao.getQueueList());
+        request.setAttribute("sameDayQueueEnabled", dao.isWalkinQueueEnabled());
+        request.setAttribute("availableWalkinClinics", dao.getAvailableWalkinClinics());
+        request.getRequestDispatcher("/admin/queue.jsp").forward(request, response);
     }
 }

@@ -1,65 +1,75 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 package com.mycompany.system.controller;
 
+import com.google.gson.Gson;
 import com.mycompany.system.bean.AdminBean;
 import com.mycompany.system.db.AdminDB;
 import com.mycompany.system.model.LoginUser;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
+
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 @WebServlet("/admin/update-profile")
 public class AdminProfileUpdateServlet extends HttpServlet {
+    private final Gson gson = new Gson();
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) 
-            throws ServletException, IOException {
-        
-        HttpSession session = request.getSession(false);
-        LoginUser loginUser = (LoginUser) (session != null ? session.getAttribute("loginUser") : null);
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("application/json;charset=UTF-8");
+        Map<String, Object> result = new HashMap<>();
 
-        if (loginUser == null || !"admin".equals(loginUser.getRole())) {
-            response.sendRedirect(request.getContextPath() + "/login.jsp");
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("loginUser") == null || !"admin".equals(session.getAttribute("role"))) {
+            writeJson(response, HttpServletResponse.SC_UNAUTHORIZED, false, "Unauthorized", result);
             return;
         }
 
-        String action = request.getParameter("action");
-        Long adminId = loginUser.getId();
+        LoginUser user = (LoginUser) session.getAttribute("loginUser");
+        Long adminId = user.getId();
+
+        String oldPwd = request.getParameter("oldPwd");
+        String newPwd = request.getParameter("newPwd");
+
+        if (newPwd == null || newPwd.trim().isEmpty()) {
+            writeJson(response, HttpServletResponse.SC_BAD_REQUEST, false, "New password is required", result);
+            return;
+        }
+        if (oldPwd == null || oldPwd.trim().isEmpty()) {
+            writeJson(response, HttpServletResponse.SC_BAD_REQUEST, false, "Current password is required", result);
+            return;
+        }
 
         try {
-            if ("changePassword".equals(action)) {
-                // Password Change
-                String oldPwd = request.getParameter("oldPwd");
-                String newPwd = request.getParameter("newPwd");
-
-                AdminBean admin = AdminDB.getById(adminId);
-                if (admin == null || !admin.getPassword().equals(oldPwd)) {
-                    request.setAttribute("error", "Current password is incorrect");
-                } else if (AdminDB.updatePassword(adminId, newPwd)) {
-                    request.setAttribute("success", "Password updated successfully");
-                } else {
-                    request.setAttribute("error", "Failed to update password");
-                }
+            AdminBean admin = AdminDB.getById(adminId);
+            if (admin == null) {
+                writeJson(response, HttpServletResponse.SC_NOT_FOUND, false, "Admin user not found", result);
+                return;
+            }
+            if (!admin.getPassword().equals(oldPwd)) {
+                writeJson(response, HttpServletResponse.SC_FORBIDDEN, false, "Incorrect current password", result);
+                return;
+            }
+            if (AdminDB.updatePassword(adminId, newPwd)) {
+                writeJson(response, HttpServletResponse.SC_OK, true, "Password updated successfully", result);
             } else {
-                // Profile Update
-                AdminBean admin = new AdminBean();
-                admin.setId(adminId);
-                admin.setRealName(request.getParameter("realName"));
-                admin.setEmail(request.getParameter("email"));
-                admin.setPhone(request.getParameter("phone"));
-
-                if (AdminDB.update(admin)) {
-                    request.setAttribute("success", "Profile updated successfully");
-                } else {
-                    request.setAttribute("error", "Failed to update profile");
-                }
+                writeJson(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, false, "Failed to update password", result);
             }
         } catch (Exception e) {
             e.printStackTrace();
-            request.setAttribute("error", "Server error occurred");
+            writeJson(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, false, "Server error: " + e.getMessage(), result);
         }
+    }
 
-        // Redirect back to profile page
-        response.sendRedirect(request.getContextPath() + "/admin/dashboard");
+    private void writeJson(HttpServletResponse response, int status, boolean success, String message, Map<String, Object> map) throws IOException {
+        response.setStatus(status);
+        map.put("success", success);
+        map.put("message", message);
+        response.getWriter().write(gson.toJson(map));
     }
 }

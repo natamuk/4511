@@ -1,14 +1,15 @@
 package com.mycompany.system.controller;
 
-import com.mycompany.system.dao.AdminDashboardDao;
+import com.mycompany.system.bean.AdminBean;
+import com.mycompany.system.db.AdminDB;
 import com.mycompany.system.model.LoginUser;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import java.io.IOException;
 
-@WebServlet("/admin/notifications")
-public class AdminNotificationsServlet extends HttpServlet {
+@WebServlet("/admin/profile")
+public class AdminProfileServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -19,8 +20,8 @@ public class AdminNotificationsServlet extends HttpServlet {
             return;
         }
         LoginUser user = (LoginUser) session.getAttribute("loginUser");
-        AdminDashboardDao dao = new AdminDashboardDao();
-        request.setAttribute("notifications", dao.getNotifications(user.getId()));
-        request.getRequestDispatcher("/admin/notifications.jsp").forward(request, response);
+        AdminBean admin = AdminDB.getById(user.getId());
+        request.setAttribute("adminProfile", admin);
+        request.getRequestDispatcher("/admin/profile.jsp").forward(request, response);
     }
 }

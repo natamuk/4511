@@ -25,7 +25,6 @@ public class AdminAppointmentUpdateServlet extends HttpServlet {
         response.setContentType("application/json;charset=UTF-8");
         Map<String, Object> result = new HashMap<>();
 
-        // 權限檢查
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("loginUser") == null ||
                 !"admin".equals(session.getAttribute("role"))) {
@@ -37,8 +36,8 @@ public class AdminAppointmentUpdateServlet extends HttpServlet {
         }
 
         String idStr = request.getParameter("id");
-        String status = request.getParameter("status");     // optional
-        String doctorIdStr = request.getParameter("doctorId"); // optional
+        String status = request.getParameter("status");    
+        String doctorIdStr = request.getParameter("doctorId"); 
 
         if (idStr == null) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);

@@ -25,7 +25,6 @@ public class AdminClinicManageServlet extends HttpServlet {
         response.setContentType("application/json;charset=UTF-8");
         Map<String, Object> result = new HashMap<>();
 
-        // 權限檢查
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("loginUser") == null ||
                 !"admin".equals(session.getAttribute("role"))) {
@@ -36,7 +35,7 @@ public class AdminClinicManageServlet extends HttpServlet {
             return;
         }
 
-        String action = request.getParameter("action"); // add / update / disable
+        String action = request.getParameter("action");
         if (action == null) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             result.put("success", false);

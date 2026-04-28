@@ -1,3 +1,7 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 package com.mycompany.system.controller;
 
 import com.mycompany.system.dao.AdminDashboardDao;
@@ -7,8 +11,8 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import java.io.IOException;
 
-@WebServlet("/admin/notifications")
-public class AdminNotificationsServlet extends HttpServlet {
+@WebServlet("/admin/appointments")
+public class AdminAppointmentsServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -18,9 +22,8 @@ public class AdminNotificationsServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/login.jsp");
             return;
         }
-        LoginUser user = (LoginUser) session.getAttribute("loginUser");
         AdminDashboardDao dao = new AdminDashboardDao();
-        request.setAttribute("notifications", dao.getNotifications(user.getId()));
-        request.getRequestDispatcher("/admin/notifications.jsp").forward(request, response);
+        request.setAttribute("appointments", dao.getAppointments());
+        request.getRequestDispatcher("/admin/appointments.jsp").forward(request, response);
     }
 }

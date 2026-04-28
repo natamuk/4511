@@ -7,8 +7,8 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import java.io.IOException;
 
-@WebServlet("/admin/notifications")
-public class AdminNotificationsServlet extends HttpServlet {
+@WebServlet("/admin/users")
+public class AdminUsersServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -18,9 +18,10 @@ public class AdminNotificationsServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/login.jsp");
             return;
         }
-        LoginUser user = (LoginUser) session.getAttribute("loginUser");
         AdminDashboardDao dao = new AdminDashboardDao();
-        request.setAttribute("notifications", dao.getNotifications(user.getId()));
-        request.getRequestDispatcher("/admin/notifications.jsp").forward(request, response);
+        request.setAttribute("doctorUsers", dao.getDoctors());
+        request.setAttribute("patientUsers", dao.getPatients());
+        // 如果需要 admin 列表，请在 DAO 中实现 getAdminUsers()，此处暂不添加
+        request.getRequestDispatcher("/admin/users.jsp").forward(request, response);
     }
 }
