@@ -12,6 +12,7 @@ public class DoctorBean {
     private String username;
     private String password;
     private String realName;
+    private int gender;
     private String phone;
     private String email;
     private String title;
@@ -53,6 +54,15 @@ public class DoctorBean {
         this.realName = realName;
     }
 
+    public int getGender() {
+        return gender;
+    }
+
+    public void setGender(int gender) {
+        this.gender = gender;
+    }
+
+    
     public String getPhone() {
         return phone;
     }

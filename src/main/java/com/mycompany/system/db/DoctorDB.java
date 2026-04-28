@@ -57,19 +57,26 @@ public class DoctorDB {
         return list;
     }
 
-    public static boolean insert(DoctorBean doctor) {
-        String sql = "INSERT INTO doctor (username, password, real_name, phone, email, title, department_id, avatar, status, create_time, update_time) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
-        try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+     public static boolean insert(DoctorBean doctor) {
+        String sql = "INSERT INTO doctor "
+                + "(username, password, real_name, gender, phone, email, title, "
+                + "department_id, avatar, status, create_time, update_time) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
+        
+        try (Connection conn = DBUtil.getConnection(); 
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            
             ps.setString(1, doctor.getUsername());
             ps.setString(2, doctor.getPassword());
             ps.setString(3, doctor.getRealName());
-            ps.setString(4, doctor.getPhone());
-            ps.setString(5, doctor.getEmail());
-            ps.setString(6, doctor.getTitle());
-            ps.setObject(7, doctor.getDepartmentId());
-            ps.setString(8, doctor.getAvatar());
-            ps.setInt(9, doctor.getStatus());
+            ps.setObject(4, doctor.getGender());    
+            ps.setString(5, doctor.getPhone());
+            ps.setString(6, doctor.getEmail());
+            ps.setString(7, doctor.getTitle());
+            ps.setObject(8, doctor.getDepartmentId());
+            ps.setString(9, doctor.getAvatar());
+            ps.setInt(10, doctor.getStatus() != null ? doctor.getStatus() : 1);
+            
             int affected = ps.executeUpdate();
             if (affected > 0) {
                 try (ResultSet rs = ps.getGeneratedKeys()) {
@@ -166,5 +173,5 @@ public class DoctorDB {
         }
         return deleted;
     }
-
+    
 }

@@ -4,6 +4,8 @@
     Author     : 123
 --%>
 
+<%@page import="com.mycompany.system.db.AdminDB"%>
+<%@page import="com.mycompany.system.bean.AdminBean"%>
 <%@ page isELIgnored="false" %>
 <%@page import="com.mycompany.system.db.PatientDB"%>
 <%@page import="com.mycompany.system.db.DoctorDB"%>
@@ -11,6 +13,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@taglib uri="/WEB-INF/tlds/doctor.tld" prefix="doc" %>
 <%@taglib uri="/WEB-INF/tlds/patient.tld" prefix="pat" %>
+<%@taglib uri="/WEB-INF/tlds/admin.tld" prefix="adm" %>
 <%@page import="java.util.ArrayList" %>
 <%@page import="com.mycompany.system.bean.DoctorBean" %>
 <%@page import="com.mycompany.system.bean.PatientBean" %>
@@ -23,18 +26,37 @@
     List<PatientBean> patientList = PatientDB.getAll();
     request.setAttribute("patientUsers", patientList);
 
+    List<AdminBean> adminList = AdminDB.getAll();
+    request.setAttribute("adminUsers", adminList);
 %>
 
 <div class="space-y-8">
 
     <div class="glass rounded-3xl p-8">
         <div class="flex items-center justify-between mb-6 border-b pb-4">
+            <h3 class="text-2xl font-semibold text-gray-800">Admin Management</h3>
+            <a href="${pageContext.request.contextPath}/admin/contents/add-user.jsp?role=admin"
+               class="px-4 py-2 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition">
+                Add User
+            </a>
+        </div>
+        <form method="get">
+            <div class="mb-6">
+
+                <input type="text" name="docSearchInput" placeholder="Search by name / phone / email..."
+                       class="w-full md:w-1/2 px-4 py-3 border rounded-xl outline-none">
+                <button type="submit">Search</button>
+            </div>
+            <div class="overflow-x-auto">
+                <adm:adminTable admins="${adminUsers}" />
+            </div>
+        </form>
+    </div>
+
+    <div class="glass rounded-3xl p-8">
+        <div class="flex items-center justify-between mb-6 border-b pb-4">
             <h3 class="text-2xl font-semibold text-gray-800">Doctor Management</h3>
             <div class="flex items-center gap-3">
-                <a href="${pageContext.request.contextPath}/admin/contents/add-user.jsp"
-                   class="px-4 py-2 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition">
-                    Add User
-                </a>
             </div>
         </div>
         <form method="get">
@@ -60,7 +82,6 @@
                        class="w-full md:w-1/2 px-4 py-3 border rounded-xl outline-none">
                 <button type="submit">Search</button>
 
-                
             </div>
         </form>
         <div class="overflow-x-auto">

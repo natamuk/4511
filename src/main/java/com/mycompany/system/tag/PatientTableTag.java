@@ -23,7 +23,7 @@ public class PatientTableTag extends SimpleTagSupport {
 
         out.write("<table class='w-full text-sm text-left min-w-[900px]'>");
         out.write("<thead class='bg-gray-50 text-gray-600 border-b'>");
-        out.write("<tr><th>Name</th><th>Username</th><th>Phone</th><th>Email</th><th>Address</th><th>Status</th><th>Action</th></tr>");
+        out.write("<tr><th>Name</th><th>Username</th><th>Phone</th><th>Email</th><th>Address</th><th>Action</th></tr>");
         out.write("</thead><tbody>");
         if (patients != null) {
             for (PatientBean p : patients) {
@@ -33,7 +33,6 @@ public class PatientTableTag extends SimpleTagSupport {
                 out.write("<td>" + p.getPhone() + "</td>");
                 out.write("<td>" + p.getEmail() + "</td>");
                 out.write("<td>" + p.getAddress() + "</td>");
-                out.write("<td>" + (p.getStatus() == 1 ? "Active" : "Inactive") + "</td>");
                 out.write("<td><a href='" + contextPath + "/admin/contents/edit.jsp?role=patient&id=" + p.getId()
                         + "' class='px-3 py-1 bg-green-600 text-white rounded'>Edit</a>");
                 out.write("<a href='" + contextPath + "/AbminDeleteServlet?role=patient&id=" + p.getId()

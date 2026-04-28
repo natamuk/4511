@@ -138,4 +138,51 @@ public class AdminDB {
         }
         return a;
     }
+
+    public static List<AdminBean> search(String keyword) {
+        List<AdminBean> list = new ArrayList<>();
+        String sql = "SELECT * FROM admin WHERE real_name LIKE ? OR username LIKE ? OR phone LIKE ? OR email LIKE ? ORDER BY id DESC";
+        try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            String like = "%" + keyword + "%";
+            ps.setString(1, like);
+            ps.setString(2, like);
+            ps.setString(3, like);
+            ps.setString(4, like);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRow(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public static boolean deleteById(Long id) {
+        boolean deleted = false;
+        if (id == 1) {
+            System.out.println("⚠️ Cannot delete default admin (ID: " + id + ")");
+            return false;
+        }
+        try (Connection conn = DBUtil.getConnection()) {
+            try (PreparedStatement ps1 = conn.prepareStatement(
+                    "DELETE FROM notice WHERE publisher_id = ? AND publisher_type = 1")) {
+                ps1.setLong(1, id);
+                ps1.executeUpdate();
+            }
+            try (PreparedStatement ps2 = conn.prepareStatement(
+                    "DELETE FROM admin WHERE id = ?")) {
+                ps2.setLong(1, id);
+                int rows = ps2.executeUpdate();
+                deleted = (rows > 0);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return deleted;
+    }
+
 }

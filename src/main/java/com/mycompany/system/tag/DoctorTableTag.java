@@ -23,7 +23,7 @@ public class DoctorTableTag extends SimpleTagSupport {
 
         out.write("<table class='w-full text-sm text-left min-w-[900px]'>");
         out.write("<thead class='bg-gray-50 text-gray-600 border-b'>");
-        out.write("<tr><th>Name</th><th>Username</th><th>Phone</th><th>Email</th><th>Title</th><th>Status</th><th>Action</th></tr>");
+        out.write("<tr><th>Name</th><th>Username</th><th>Phone</th><th>Email</th><th>Title</th><th>Action</th></tr>");
         out.write("</thead><tbody>");
         if (doctors != null) {
             for (DoctorBean d : doctors) {
@@ -33,7 +33,6 @@ public class DoctorTableTag extends SimpleTagSupport {
                 out.write("<td>" + d.getPhone() + "</td>");
                 out.write("<td>" + d.getEmail() + "</td>");
                 out.write("<td>" + d.getTitle() + "</td>");
-                out.write("<td>" + (d.getStatus() == 1 ? "Active" : "Inactive") + "</td>");
                 out.write("<td>");
                 out.write("<a href='" + contextPath + "/admin/contents/edit.jsp?role=doctor&id=" + d.getId()
                         + "' class='px-3 py-1 bg-blue-600 text-white rounded mr-2'>Edit</a>");
