@@ -41,7 +41,7 @@ public class AdminTableTag extends SimpleTagSupport {
                 out.write("<td>" + (a.getPhone() != null ? a.getPhone() : "") + "</td>");
                 out.write("<td>" + (a.getEmail() != null ? a.getEmail() : "") + "</td>");
                 out.write("<td>");
-                out.write("<a href='" + contextPath + "/admin/contents/edit.jsp?role=admin&id=" + a.getId() 
+                out.write("<a href='" + contextPath + "/admin/edit.jsp?role=admin&id=" + a.getId() 
                         + "' class='px-3 py-1 bg-blue-600 text-white rounded mr-2 hover:bg-blue-700'>Edit</a>");
                 out.write("<a href='" + contextPath + "/AbminDeleteServlet?role=admin&id=" + a.getId() 
                         + "' class='px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700' "

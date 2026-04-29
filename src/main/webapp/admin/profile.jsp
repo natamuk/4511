@@ -3,6 +3,7 @@
 <%@ page import="com.mycompany.system.model.LoginUser" %>
 <%@ page import="com.mycompany.system.db.AdminDB" %>
 <%@ page import="com.mycompany.system.bean.AdminBean" %>
+<%@taglib uri="/WEB-INF/tlds/current-date" prefix="today" %>
 
 <%
     LoginUser loginUser = (LoginUser) session.getAttribute("loginUser");
@@ -102,7 +103,7 @@
             <div class="main flex-1 flex flex-col overflow-hidden">
                 <header class="bg-white border-b px-8 py-5 flex items-center justify-between">
                     <h2 class="text-2xl font-semibold">Account Profile</h2>
-                    <span id="current-date" class="text-sm text-gray-500"></span>
+                    <today:today/>
                 </header>
 
                 <div class="flex-1 overflow-auto p-8">

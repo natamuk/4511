@@ -4,6 +4,7 @@
 <%@ page import="com.mycompany.system.dao.AdminDashboardDao" %>
 <%@ page import="java.util.*" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@taglib uri="/WEB-INF/tlds/current-date" prefix="today" %>
 
 <%
     LoginUser loginUser = (LoginUser) session.getAttribute("loginUser");
@@ -118,7 +119,7 @@
         <div class="main">
             <header class="header">
                 <h2 class="text-2xl font-semibold">Queue Management</h2>
-                <span id="current-date" class="text-sm text-gray-500"></span>
+                <today:today/>
             </header>
 
             <div class="content">

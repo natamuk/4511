@@ -3,6 +3,8 @@
 <%@ page import="com.mycompany.system.dao.AdminDashboardDao" %>
 <%@ page import="java.util.*" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@taglib uri="/WEB-INF/tlds/current-date" prefix="today" %>
+
 <%
     LoginUser loginUser = (LoginUser) session.getAttribute("loginUser");
     if (loginUser == null || !"admin".equals(session.getAttribute("role"))) {
@@ -56,7 +58,8 @@
         </div>
     </aside>
     <div class="flex-1 flex flex-col min-w-0">
-        <header class="glass border-b px-8 py-4 flex justify-between items-center"><h2 class="text-2xl font-semibold">Notifications</h2><div class="flex items-center gap-3"><span id="current-date" class="text-sm text-gray-500"></span></div></header>
+        <header class="glass border-b px-8 py-4 flex justify-between items-center"><h2 class="text-2xl font-semibold">Notifications</h2><div class="flex items-center gap-3">
+                <today:today/></div></header>
         <div class="flex-1 overflow-auto p-4 md:p-8">
             <div class="glass rounded-3xl p-8 max-w-5xl mx-auto">
                 <div class="flex items-center justify-between mb-6 border-b pb-4"><h3 class="text-2xl font-bold text-gray-800">Alerts & Notifications</h3><button onclick="markAllRead()" class="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium rounded-xl transition"><i class="fa-solid fa-check-double mr-1"></i> Mark All as Read</button></div>
