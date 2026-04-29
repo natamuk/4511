@@ -168,25 +168,28 @@
     </head>
     <body>
         <div class="app">
-            <aside class="sidebar">
-                <div class="sidebar-header">
-                    <div class="flex items-center gap-2"><i class="fa-solid fa-user-shield text-2xl"></i><div><h1 class="text-xl font-bold">CCHC</h1><p class="text-sm opacity-90">Admin Console</p></div></div>
+            <aside class="w-80 glass bg-white shadow-2xl flex flex-col border-r border-white/50 fixed md:relative h-full z-40">
+                <div class="p-6 bg-gradient-to-r from-indigo-700 to-violet-700 text-white"><div class="flex items-center gap-3"><i class="fa-solid fa-user-shield text-4xl"></i><div><h1 class="text-2xl font-bold">CCHC</h1><p class="text-sm opacity-90">Admin Console</p></div></div></div>
+                <div class="p-6 flex-1 flex flex-col overflow-y-auto">
+                    <div class="flex items-center gap-4 p-4 glass rounded-3xl mb-8"><img src="https://picsum.photos/200/200?random=99" class="w-14 h-14 rounded-2xl ring-4 ring-white object-cover"><div><p class="font-semibold"><%= loginUser.getRealName()%></p><p class="text-indigo-600 text-sm">Full Access</p></div></div>
+                    <nav class="space-y-1">
+                        <a href="${pageContext.request.contextPath}/admin/dashboard.jsp" class="nav-item"><i class="fa-solid fa-chart-pie w-5"></i><span>Dashboard</span></a>
+                        <a href="${pageContext.request.contextPath}/admin/users.jsp" class="nav-item"><i class="fa-solid fa-users w-5"></i><span>User Management</span></a>
+                        <a href="${pageContext.request.contextPath}/admin/appointments.jsp" class="nav-item"><i class="fa-solid fa-calendar-check w-5"></i><span>Appointments</span></a>
+                        <a href="${pageContext.request.contextPath}/admin/queue.jsp" class="nav-item"><i class="fa-solid fa-list-ol w-5"></i><span>Queue</span></a>
+                        <a href="${pageContext.request.contextPath}/admin/quota.jsp" class="nav-item"><i class="fa-solid fa-server w-5"></i><span>Services & Quota</span></a>
+                        <a href="${pageContext.request.contextPath}/admin/reports.jsp" class="nav-item"><i class="fa-solid fa-chart-bar w-5"></i><span>Reports</span></a>
+                        <a href="${pageContext.request.contextPath}/admin/logs.jsp" class="nav-item"><i class="fa-solid fa-clipboard-list w-5"></i><span>Audit Logs</span></a>
+                        <a href="${pageContext.request.contextPath}/admin/notifications.jsp" class="nav-item"><i class="fa-solid fa-bell w-5"></i><span>Notifications</span></a>
+                        <a href="${pageContext.request.contextPath}/admin/settings.jsp" class="nav-item active"><i class="fa-solid fa-sliders w-5"></i><span>Settings</span></a>
+                        <a href="${pageContext.request.contextPath}/admin/csv.jsp" class="nav-item"><i class="fa-solid fa-file-csv w-5"></i><span>CSV Import/Export</span></a>
+                        <a href="${pageContext.request.contextPath}/admin/profile.jsp" class="nav-item"><i class="fa-solid fa-user-gear w-5"></i><span>Profile</span></a>
+                    </nav>
+                    <div class="mt-auto pt-6 border-t border-white/40"><a href="${pageContext.request.contextPath}/logout" class="w-full flex items-center justify-center gap-3 px-5 py-3 rounded-2xl text-gray-600 hover:bg-red-50 hover:text-red-600 transition"><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></a></div>
                 </div>
-                <div class="sidebar-nav">
-                    <a href="${pageContext.request.contextPath}/admin/dashboard.jsp" class="nav-item"><i class="fa-solid fa-chart-pie"></i> Dashboard</a>
-                    <a href="${pageContext.request.contextPath}/admin/users.jsp" class="nav-item"><i class="fa-solid fa-users"></i> User Management</a>
-                    <a href="${pageContext.request.contextPath}/admin/appointments.jsp" class="nav-item"><i class="fa-solid fa-calendar-check"></i> Appointments</a>
-                    <a href="${pageContext.request.contextPath}/admin/queue.jsp" class="nav-item"><i class="fa-solid fa-list-ol"></i> Queue</a>
-                    <a href="${pageContext.request.contextPath}/admin/quota.jsp" class="nav-item"><i class="fa-solid fa-server"></i> Services & Quota</a>
-                    <a href="${pageContext.request.contextPath}/admin/reports.jsp" class="nav-item"><i class="fa-solid fa-chart-bar"></i> Reports</a>
-                    <a href="${pageContext.request.contextPath}/admin/logs.jsp" class="nav-item"><i class="fa-solid fa-clipboard-list"></i> Audit Logs</a>
-                    <a href="${pageContext.request.contextPath}/admin/notifications.jsp" class="nav-item"><i class="fa-solid fa-bell"></i> Notifications</a>
-                    <a href="${pageContext.request.contextPath}/admin/settings.jsp" class="nav-item active"><i class="fa-solid fa-sliders"></i> Settings</a>
-                    <a href="${pageContext.request.contextPath}/admin/csv.jsp" class="nav-item"><i class="fa-solid fa-file-csv"></i> CSV Import/Export</a>
-                    <a href="${pageContext.request.contextPath}/admin/profile.jsp" class="nav-item"><i class="fa-solid fa-user-gear"></i> Profile</a>
-                </div>
-                <div class="logout-btn"><a href="${pageContext.request.contextPath}/logout" class="nav-item justify-center text-red-600"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></div>
             </aside>
+                
+                
             <div class="main">
                 <header class="header"><h2 class="text-2xl font-semibold">System Settings</h2><span id="current-date" class="text-sm text-gray-500"></span></header>
                 <div class="content">

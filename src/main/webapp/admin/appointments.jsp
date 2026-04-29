@@ -32,6 +32,42 @@
             body {
                 font-family: 'Noto Sans TC', sans-serif;
                 background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%);
+                margin: 0;
+                height: 100vh;
+                overflow: hidden;
+            }
+            .app {
+                display: flex;
+                height: 100vh;
+                overflow: hidden;
+            }
+            .sidebar {
+                width: 320px;
+                background: white;
+                border-right: 1px solid #e5e7eb;
+                display: flex;
+                flex-direction: column;
+                flex-shrink: 0;
+                box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+            }
+            .main {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+            }
+            .header {
+                background: white;
+                border-bottom: 1px solid #e5e7eb;
+                padding: 1.5rem 2rem;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .content {
+                flex: 1;
+                overflow-y: auto;
+                padding: 2rem;
             }
             .glass {
                 background: rgba(255,255,255,0.95);
@@ -82,7 +118,7 @@
     <body>
     <body class="min-h-screen">
         <div class="flex h-screen overflow-hidden">
-            <aside class="w-80 glass shadow-2xl flex flex-col border-r border-white/50 fixed md:relative h-full z-40">
+            <aside class="w-80  bg-white glass shadow-2xl flex flex-col border-r border-white/50 fixed md:relative h-full z-40">
                 <div class="p-6 bg-gradient-to-r from-indigo-700 to-violet-700 text-white">
                     <div class="flex items-center gap-3">
                         <i class="fa-solid fa-user-shield text-4xl"></i>
@@ -92,46 +128,71 @@
                         </div>
                     </div>
                 </div>
-                        <div class="p-6 flex-1 flex flex-col overflow-y-auto">
-            <div class="flex items-center gap-4 p-4 glass rounded-3xl mb-8">
-                <img src="https://picsum.photos/200/200?random=99" class="w-14 h-14 rounded-2xl ring-4 ring-white object-cover">
-                <div>
-                    <p class="font-semibold"><%= loginUser.getRealName() %></p>
-                    <p class="text-indigo-600 text-sm">Full Access</p>
-                </div>
-            </div>
-                <div class="space-y-1">
-                    <a href="${pageContext.request.contextPath}/admin/dashboard.jsp" class="nav-item"><i class="fa-solid fa-chart-pie"></i> Dashboard</a>
-                    <a href="${pageContext.request.contextPath}/admin/users.jsp" class="nav-item"><i class="fa-solid fa-users"></i> User Management</a>
-                    <a href="${pageContext.request.contextPath}/admin/appointments.jsp" class="nav-item active"><i class="fa-solid fa-calendar-check"></i> Appointments</a>
-                    <a href="${pageContext.request.contextPath}/admin/queue.jsp" class="nav-item"><i class="fa-solid fa-list-ol"></i> Queue</a>
-                    <a href="${pageContext.request.contextPath}/admin/quota.jsp" class="nav-item"><i class="fa-solid fa-server"></i> Services & Quota</a>
-                    <a href="${pageContext.request.contextPath}/admin/reports.jsp" class="nav-item"><i class="fa-solid fa-chart-bar"></i> Reports</a>
-                    <a href="${pageContext.request.contextPath}/admin/logs.jsp" class="nav-item"><i class="fa-solid fa-clipboard-list"></i> Audit Logs</a>
-                    <a href="${pageContext.request.contextPath}/admin/notifications.jsp" class="nav-item"><i class="fa-solid fa-bell"></i> Notifications</a>
-                    <a href="${pageContext.request.contextPath}/admin/settings.jsp" class="nav-item"><i class="fa-solid fa-sliders"></i> Settings</a>
-                    <a href="${pageContext.request.contextPath}/admin/csv.jsp" class="nav-item"><i class="fa-solid fa-file-csv"></i> CSV Import/Export</a>
-                    <a href="${pageContext.request.contextPath}/admin/profile.jsp" class="nav-item"><i class="fa-solid fa-user-gear"></i> Profile</a>
-                </div>
-                <div class="logout-btn"><a href="${pageContext.request.contextPath}/logout" class="nav-item justify-center text-red-600 hover:bg-red-50"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></div>
+                <div class="p-6 flex-1 flex flex-col overflow-y-auto">
+                    <div class="flex items-center gap-4 p-4 glass rounded-3xl mb-8">
+                        <img src="https://picsum.photos/200/200?random=99" class="w-14 h-14 rounded-2xl ring-4 ring-white object-cover">
+                        <div>
+                            <p class="font-semibold"><%= loginUser.getRealName()%></p>
+                            <p class="text-indigo-600 text-sm">Full Access</p>
+                        </div>
+                    </div>
+                    <div class="space-y-1">
+                        <a href="${pageContext.request.contextPath}/admin/dashboard.jsp" class="nav-item"><i class="fa-solid fa-chart-pie"></i> Dashboard</a>
+                        <a href="${pageContext.request.contextPath}/admin/users.jsp" class="nav-item"><i class="fa-solid fa-users"></i> User Management</a>
+                        <a href="${pageContext.request.contextPath}/admin/appointments.jsp" class="nav-item active"><i class="fa-solid fa-calendar-check"></i> Appointments</a>
+                        <a href="${pageContext.request.contextPath}/admin/queue.jsp" class="nav-item"><i class="fa-solid fa-list-ol"></i> Queue</a>
+                        <a href="${pageContext.request.contextPath}/admin/quota.jsp" class="nav-item"><i class="fa-solid fa-server"></i> Services & Quota</a>
+                        <a href="${pageContext.request.contextPath}/admin/reports.jsp" class="nav-item"><i class="fa-solid fa-chart-bar"></i> Reports</a>
+                        <a href="${pageContext.request.contextPath}/admin/logs.jsp" class="nav-item"><i class="fa-solid fa-clipboard-list"></i> Audit Logs</a>
+                        <a href="${pageContext.request.contextPath}/admin/notifications.jsp" class="nav-item"><i class="fa-solid fa-bell"></i> Notifications</a>
+                        <a href="${pageContext.request.contextPath}/admin/settings.jsp" class="nav-item"><i class="fa-solid fa-sliders"></i> Settings</a>
+                        <a href="${pageContext.request.contextPath}/admin/csv.jsp" class="nav-item"><i class="fa-solid fa-file-csv"></i> CSV Import/Export</a>
+                        <a href="${pageContext.request.contextPath}/admin/profile.jsp" class="nav-item"><i class="fa-solid fa-user-gear"></i> Profile</a>
+                    </div>
+                    <div class="logout-btn"><a href="${pageContext.request.contextPath}/logout" class="nav-item justify-center text-red-600 hover:bg-red-50"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></div>
             </aside>
 
             <div class="main">
-                <header class="header"><h2 class="text-2xl font-semibold">Appointments</h2><span id="current-date" class="text-sm text-gray-500"></span></header>
+                <header class="header">
+                    <h2 class="text-2xl font-semibold">Appointments Management</h2>
+                    <span id="current-date" class="text-sm text-gray-500"></span>
+                </header>
+
                 <div class="content">
-                    <div class="glass-card">
-                        <h3 class="text-xl font-semibold mb-4 border-b pb-2">Appointment Overview</h3>
+                    <div class="bg-white rounded-3xl shadow-sm p-8">
+                        <h3 class="text-xl font-semibold mb-6">Appointment Overview</h3>
                         <div class="overflow-x-auto">
-                            <table>
+                            <table class="w-full">
                                 <thead>
-                                    <tr><th>Date & Time</th><th>Ticket No.</th><th>Patient Name</th><th>Doctor</th><th>Department</th><th>Status</th></tr>
+                                    <tr class="bg-gray-50">
+                                        <th class="py-4 px-6 text-left">Date & Time</th>
+                                        <th class="py-4 px-6 text-left">Ticket No.</th>
+                                        <th class="py-4 px-6 text-left">Patient Name</th>
+                                        <th class="py-4 px-6 text-left">Doctor</th>
+                                        <th class="py-4 px-6 text-left">Department</th>
+                                        <th class="py-4 px-6 text-left">Status</th>
+                                    </tr>
                                 </thead>
                                 <tbody>
-                                    <c:if test="${empty appointments}"><tr><td colspan="6" class="text-center py-8 text-gray-500">No appointment records</td></tr></c:if>
+                                    <c:if test="${empty appointments}">
+                                        <tr>
+                                            <td colspan="6" class="text-center py-12 text-gray-500">No appointment records found</td>
+                                        </tr>
+                                    </c:if>
                                     <c:forEach var="a" items="${appointments}">
-                                        <tr><td>${a.date} ${a.time}</td><td class="font-mono text-indigo-600">${a.regNo}</td><td class="font-bold">${a.patient}</td><td>${a.doctor}</td><td>${a.department}</td>
-                                            <td><span class="badge ${a.status eq 'Completed' ? 'badge-success' : (a.status eq 'Cancelled' or a.status eq 'no_show' ? 'badge-danger' : 'badge-info')}">${a.status}</span></td></tr>
-                                            </c:forEach>
+                                        <tr class="border-b hover:bg-gray-50">
+                                            <td class="py-4 px-6">${a.date} ${a.time}</td>
+                                            <td class="py-4 px-6 font-mono text-indigo-600">${a.regNo}</td>
+                                            <td class="py-4 px-6 font-semibold">${a.patient}</td>
+                                            <td class="py-4 px-6">${a.doctor}</td>
+                                            <td class="py-4 px-6">${a.department}</td>
+                                            <td class="py-4 px-6">
+                                                <span class="badge ${a.status eq 'Completed' ? 'badge-success' : (a.status eq 'Cancelled' ? 'badge-danger' : 'badge-info')}">
+                                                    ${a.status}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </c:forEach>
                                 </tbody>
                             </table>
                         </div>
@@ -139,6 +200,7 @@
                 </div>
             </div>
         </div>
-        <script>document.getElementById('current-date').innerText = new Date().toLocaleDateString('zh-CN');</script>
-    </body>
+    </div>
+    <script>document.getElementById('current-date').innerText = new Date().toLocaleDateString('zh-CN');</script>
+</body>
 </html>

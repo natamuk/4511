@@ -102,6 +102,7 @@
             <div class="mt-auto pt-6 border-t border-white/40"><a href="${pageContext.request.contextPath}/logout" class="w-full flex items-center justify-center gap-3 px-5 py-3 rounded-2xl text-gray-600 hover:bg-red-50 hover:text-red-600 transition"><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></a></div>
         </div>
     </aside>
+        
     <div class="flex-1 flex flex-col min-w-0">
         <header class="glass border-b px-8 py-4 flex justify-between items-center"><h2 class="text-2xl font-semibold">User Management</h2><div class="flex items-center gap-3"><span id="current-date" class="text-sm text-gray-500"></span></div></header>
         <div class="flex-1 overflow-auto p-4 md:p-8">
