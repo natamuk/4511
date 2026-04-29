@@ -110,7 +110,7 @@
 
         <div class="mt-8 text-center space-y-3">
             <a href="${pageContext.request.contextPath}/register.jsp" class="block text-blue-600 hover:underline">Don't have an account? Register now</a>
-            <a href="${pageContext.request.contextPath}/forgot.jsp" class="block text-blue-600 hover:underline">Forgot your password?</a>
+        
         </div>
 
         <%
