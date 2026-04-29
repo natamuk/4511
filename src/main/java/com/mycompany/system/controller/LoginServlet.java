@@ -36,6 +36,7 @@ public class LoginServlet extends HttpServlet {
         username = username.trim();
 
         LoginUser user = null;
+        String realName = null;
 
         AdminBean admin = AdminDB.login(username, password);
         if (admin != null) {
@@ -44,6 +45,7 @@ public class LoginServlet extends HttpServlet {
             user.setUsername(admin.getUsername());
             user.setRealName(admin.getRealName());
             user.setRole("admin");
+            realName = admin.getRealName();
         } else {
             DoctorBean doctor = DoctorDB.login(username, password);
             if (doctor != null) {
@@ -52,6 +54,7 @@ public class LoginServlet extends HttpServlet {
                 user.setUsername(doctor.getUsername());
                 user.setRealName(doctor.getRealName());
                 user.setRole("doctor");
+                realName = doctor.getRealName();
             } else {
                 PatientBean patient = PatientDB.login(username, password);
                 if (patient != null) {
@@ -60,6 +63,7 @@ public class LoginServlet extends HttpServlet {
                     user.setUsername(patient.getUsername());
                     user.setRealName(patient.getRealName());
                     user.setRole("patient");
+                    realName = patient.getRealName();
                 }
             }
         }
@@ -68,6 +72,7 @@ public class LoginServlet extends HttpServlet {
             HttpSession session = request.getSession(true);
             session.setAttribute("loginUser", user);
             session.setAttribute("role", user.getRole());
+            session.setAttribute("realName", realName);   
 
             switch (user.getRole()) {
                 case "admin":

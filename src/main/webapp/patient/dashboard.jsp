@@ -116,15 +116,8 @@
                                     if (!appointments.isEmpty()) {
                                         Map<String, Object> first = appointments.get(0);
                                         String dateStr = first.get("regDate") != null ? first.get("regDate").toString() : "";
-                                        Object slotObj = first.get("timeSlot");
-                                        String slotStr = "";
-                                        if (slotObj != null) {
-                                            int slot = Integer.parseInt(slotObj.toString());
-                                            if (slot == 1) slotStr = "Morning";
-                                            else if (slot == 2) slotStr = "Afternoon";
-                                            else if (slot == 3) slotStr = "Evening";
-                                        }
-                                        nextApptHtml = dateStr + (slotStr.isEmpty() ? "" : " " + slotStr);
+                                        String timeStr = first.get("slotTime") != null ? first.get("slotTime").toString() : "";
+                                        nextApptHtml = dateStr + (timeStr.isEmpty() ? "" : " " + timeStr);
                                     }
                                 %>
                                 <%= nextApptHtml %>

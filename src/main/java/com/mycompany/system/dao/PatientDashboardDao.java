@@ -34,46 +34,39 @@ public class PatientDashboardDao {
         return profile;
     }
 
+    // ========== 修正的关键方法 ==========
     public List<Map<String, Object>> getUpcomingAppointments(Long patientId) {
-        String sql = "SELECT r.id, r.reg_no, r.reg_date, r.queue_no, r.fee, r.status, r.cancel_time, r.call_time, "
-                + "d.real_name AS doctor_name, d.title AS doctor_title, dep.dept_name AS department_name, "
-                + "s.time_slot, s.schedule_date, c.clinic_name "
-                + "FROM registration r "
-                + "JOIN doctor d ON r.doctor_id = d.id "
-                + "JOIN department dep ON r.department_id = dep.id "
-                + "JOIN schedule s ON r.schedule_id = s.id "
-                + "LEFT JOIN clinic c ON s.clinic_id = c.id "
-                + "WHERE r.patient_id = ? "
-                + "ORDER BY r.reg_date DESC, r.queue_no ASC";
+        String sql = "SELECT r.id, r.reg_no, r.reg_date, r.slot_time, r.queue_no, r.status, " +
+                     "c.clinic_name AS clinicName, d.real_name AS doctorName " +
+                     "FROM registration r " +
+                     "JOIN clinic c ON r.clinic_id = c.id " +
+                     "JOIN doctor d ON r.doctor_id = d.id " +
+                     "WHERE r.patient_id = ? AND r.status IN (1,3,4,5) " +
+                     "ORDER BY r.reg_date ASC, r.slot_time ASC";
         List<Map<String, Object>> list = new ArrayList<>();
-        try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, patientId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     Map<String, Object> row = new HashMap<>();
                     row.put("id", rs.getLong("id"));
                     row.put("regNo", rs.getString("reg_no"));
-                    row.put("date", rs.getDate("reg_date"));
+                    row.put("regDate", rs.getDate("reg_date"));
+                    row.put("slotTime", rs.getString("slot_time"));      // 直接返回时间字符串如 "09:00"
                     row.put("queueNo", rs.getInt("queue_no"));
-                    row.put("fee", rs.getBigDecimal("fee"));
-                    row.put("statusCode", rs.getInt("status"));
                     row.put("status", regStatusToText(rs.getInt("status")));
-                    row.put("cancelTime", rs.getTimestamp("cancel_time"));
-                    row.put("callTime", rs.getTimestamp("call_time"));
-                    row.put("doctorName", rs.getString("doctor_name"));
-                    row.put("doctorTitle", rs.getString("doctor_title"));
-                    row.put("departmentName", rs.getString("department_name"));
-                    row.put("clinicName", rs.getString("clinic_name"));
-                    row.put("timeSlot", rs.getInt("time_slot"));
-                    row.put("scheduleDate", rs.getDate("schedule_date"));
+                    row.put("clinicName", rs.getString("clinicName"));
+                    row.put("doctorName", rs.getString("doctorName"));
                     list.add(row);
                 }
             }
-        } catch (Exception e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
         return list;
     }
+    // =================================
 
     public List<Map<String, Object>> getLatestNotices(Long patientId) {
         List<Map<String, Object>> list = new ArrayList<>();

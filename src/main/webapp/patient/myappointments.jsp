@@ -109,14 +109,9 @@
                                 if ("Booked".equals(status)) statusClass = "bg-blue-50 text-blue-700 border-blue-200";
                                 else if ("Completed".equals(status)) statusClass = "bg-green-50 text-green-700 border-green-200";
                                 else statusClass = "bg-red-50 text-red-700 border-red-200";
-                                String timeSlotDisplay = "";
-                                Object slotObj = item.get("timeSlot");
-                                if (slotObj != null) {
-                                    int slot = Integer.parseInt(slotObj.toString());
-                                    if (slot == 1) timeSlotDisplay = "Morning";
-                                    else if (slot == 2) timeSlotDisplay = "Afternoon";
-                                    else if (slot == 3) timeSlotDisplay = "Evening";
-                                }
+
+                                // 直接获取 slotTime 字符串 (如 "09:00")
+                                String timeDisplay = item.get("slotTime") != null ? item.get("slotTime").toString() : "";
                         %>
                             <div class="p-6 border rounded-3xl bg-white flex flex-col md:flex-row md:items-center md:justify-between gap-6 shadow-sm hover:shadow-md transition">
                                 <div class="flex-1">
@@ -126,7 +121,7 @@
                                     </div>
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-600 mt-3">
                                         <p><i class="fa-regular fa-calendar text-gray-400 w-5"></i> <b>Date:</b> <%= item.get("regDate") != null ? item.get("regDate") : "" %></p>
-                                        <p><i class="fa-regular fa-clock text-gray-400 w-5"></i> <b>Time:</b> <%= timeSlotDisplay %></p>
+                                        <p><i class="fa-regular fa-clock text-gray-400 w-5"></i> <b>Time:</b> <%= timeDisplay %></p>
                                         <p><i class="fa-solid fa-user-doctor text-gray-400 w-5"></i> <b>Doctor:</b> <%= item.get("doctorName") != null ? item.get("doctorName") : "Not Assigned" %></p>
                                         <p><i class="fa-solid fa-ticket text-gray-400 w-5"></i> <b>Queue No:</b> <%= item.get("queueNo") != null ? item.get("queueNo") : "-" %></p>
                                     </div>
@@ -159,7 +154,7 @@
     function showQR(regNo) {
         Swal.fire({
             title: 'Check-in QR Code',
-            html: `<div class="flex flex-col items-center"><canvas id="qrCanvas" class="mt-2 border p-2 rounded"></canvas><p class="font-mono mt-3">${regNo}</p></div>`,
+            html: `<div class="flex flex-col items-center"><canvas id="qrCanvas" class="mt-2 border p-2 rounded"></canvas><p class="font-mono mt-3">\${regNo}</p></div>`,
             didOpen: () => {
                 QRCode.toCanvas(document.getElementById('qrCanvas'), regNo, { width: 200, margin: 1 });
             }

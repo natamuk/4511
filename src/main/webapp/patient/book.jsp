@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" isELIgnored="true" %>
 <%@ page import="java.util.*, com.google.gson.Gson" %>
 <%
     String ctx = request.getContextPath();
@@ -23,6 +23,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
     <style>
+        /* 样式保持不变 */
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Noto Sans TC', sans-serif; background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%); }
@@ -52,6 +53,7 @@
 </head>
 <body class="min-h-screen">
 <div class="flex h-screen overflow-hidden relative">
+    <!-- 侧边栏与之前相同 -->
     <div class="w-72 glass shadow-2xl flex flex-col border-r border-white/50 z-40">
         <div class="p-6 bg-gradient-to-r from-blue-700 to-indigo-700 text-white">
             <div class="flex items-center gap-3">
