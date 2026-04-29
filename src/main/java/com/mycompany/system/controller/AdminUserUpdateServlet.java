@@ -5,14 +5,15 @@
 package com.mycompany.system.controller;
 
 import com.google.gson.Gson;
+import com.mycompany.system.bean.AdminBean;
 import com.mycompany.system.bean.DoctorBean;
 import com.mycompany.system.bean.PatientBean;
+import com.mycompany.system.db.AdminDB;
 import com.mycompany.system.db.DoctorDB;
 import com.mycompany.system.db.PatientDB;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,16 +26,13 @@ public class AdminUserUpdateServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        response.setContentType("application/json;charset=UTF-8");
-        Map<String, Object> result = new HashMap<>();
+        request.setCharacterEncoding("UTF-8");
 
+        // Security Check
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("loginUser") == null ||
                 !"admin".equals(session.getAttribute("role"))) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            result.put("success", false);
-            result.put("message", "Unauthorized");
-            response.getWriter().write(gson.toJson(result));
+            response.sendRedirect(request.getContextPath() + "/login.jsp");
             return;
         }
 
@@ -44,19 +42,20 @@ public class AdminUserUpdateServlet extends HttpServlet {
         String phone = request.getParameter("phone");
         String email = request.getParameter("email");
         String title = request.getParameter("title");
+        String genderStr = request.getParameter("gender");
         String departmentIdStr = request.getParameter("departmentId");
+        String address = request.getParameter("address");
 
         if (idStr == null || type == null) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            result.put("success", false);
-            result.put("message", "Missing required parameters");
-            response.getWriter().write(gson.toJson(result));
+            request.setAttribute("error", "Missing required parameters");
+            request.getRequestDispatcher("/admin/edit.jsp").forward(request, response);
             return;
         }
 
+        boolean success = false;
+
         try {
             Long id = Long.parseLong(idStr);
-            boolean success = false;
 
             if ("doctor".equalsIgnoreCase(type)) {
                 DoctorBean d = new DoctorBean();
@@ -65,40 +64,46 @@ public class AdminUserUpdateServlet extends HttpServlet {
                 d.setPhone(phone);
                 d.setEmail(email);
                 d.setTitle(title);
+                if (genderStr != null && !genderStr.isBlank()) {
+                    d.setGender(Integer.parseInt(genderStr));
+                }
                 if (departmentIdStr != null && !departmentIdStr.isBlank()) {
                     d.setDepartmentId(Long.parseLong(departmentIdStr));
-                } else {
-                    d.setDepartmentId(1L);
                 }
                 success = DoctorDB.update(d);
+
             } else if ("patient".equalsIgnoreCase(type)) {
                 PatientBean p = new PatientBean();
                 p.setId(id);
                 p.setRealName(realName);
                 p.setPhone(phone);
                 p.setEmail(email);
+                p.setAddress(address);
+                if (genderStr != null && !genderStr.isBlank()) {
+                    p.setGender(Integer.parseInt(genderStr));
+                }
                 success = PatientDB.update(p);
-            } else {
-                result.put("success", false);
-                result.put("message", "Invalid user type");
-                response.getWriter().write(gson.toJson(result));
-                return;
+
+            } else if ("admin".equalsIgnoreCase(type)) {
+                AdminBean a = new AdminBean();
+                a.setId(id);
+                a.setRealName(realName);
+                a.setPhone(phone);
+                a.setEmail(email);
+                success = AdminDB.update(a);
             }
 
-            if (success) {
-                result.put("success", true);
-                result.put("message", "User updated successfully");
-            } else {
-                result.put("success", false);
-                result.put("message", "Update failed or user not found");
-            }
         } catch (Exception e) {
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            result.put("success", false);
-            result.put("message", "Server error: " + e.getMessage());
             e.printStackTrace();
         }
 
-        response.getWriter().write(gson.toJson(result));
+        if (success) {
+            // Redirect on success (as you requested)
+            response.sendRedirect(request.getContextPath() + "/admin/users.jsp");
+        } else {
+            // Show error on edit page
+            request.setAttribute("error", "Update failed. Please try again.");
+            request.getRequestDispatcher("/admin/edit.jsp").forward(request, response);
+        }
     }
 }
