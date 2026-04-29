@@ -175,23 +175,23 @@
                 <div class="p-6 flex-1 flex flex-col overflow-y-auto">
                     <div class="flex items-center gap-4 p-4 glass rounded-3xl mb-8"><img src="https://picsum.photos/200/200?random=99" class="w-14 h-14 rounded-2xl ring-4 ring-white object-cover"><div><p class="font-semibold"><%= loginUser.getRealName()%></p><p class="text-indigo-600 text-sm">Full Access</p></div></div>
                     <nav class="space-y-1">
-                        <a href="${pageContext.request.contextPath}/admin/dashboard.jsp" class="nav-item"><i class="fa-solid fa-chart-pie w-5"></i><span>Dashboard</span></a>
+                        <a href="${pageContext.request.contextPath}/admin/dashboard.jsp" class="nav-item "><i class="fa-solid fa-chart-pie w-5"></i><span>Dashboard</span></a>
                         <a href="${pageContext.request.contextPath}/admin/users.jsp" class="nav-item"><i class="fa-solid fa-users w-5"></i><span>User Management</span></a>
-                        <a href="${pageContext.request.contextPath}/admin/appointments.jsp" class="nav-item"><i class="fa-solid fa-calendar-check w-5"></i><span>Appointments</span></a>
-                        <a href="${pageContext.request.contextPath}/admin/queue.jsp" class="nav-item"><i class="fa-solid fa-list-ol w-5"></i><span>Queue</span></a>
                         <a href="${pageContext.request.contextPath}/admin/quota.jsp" class="nav-item"><i class="fa-solid fa-server w-5"></i><span>Services & Quota</span></a>
+                        <a href="${pageContext.request.contextPath}/admin/clinic_config.jsp" class="nav-item"><i class="fa-solid fa-building"></i><span>Clinic & Services</span></a>
                         <a href="${pageContext.request.contextPath}/admin/reports.jsp" class="nav-item"><i class="fa-solid fa-chart-bar w-5"></i><span>Reports</span></a>
+                        <a href="${pageContext.request.contextPath}/admin/abnormal_records.jsp" class="nav-item"><i class="fa-solid fa-exclamation-triangle"></i><span>Abnormal Records</span></a>
                         <a href="${pageContext.request.contextPath}/admin/logs.jsp" class="nav-item"><i class="fa-solid fa-clipboard-list w-5"></i><span>Audit Logs</span></a>
                         <a href="${pageContext.request.contextPath}/admin/notifications.jsp" class="nav-item"><i class="fa-solid fa-bell w-5"></i><span>Notifications</span></a>
-                        <a href="${pageContext.request.contextPath}/admin/settings.jsp" class="nav-item active"><i class="fa-solid fa-sliders w-5"></i><span>Settings</span></a>
+                        <a href="${pageContext.request.contextPath}/admin/settings.jsp" class="nav-item"><i class="fa-solid fa-sliders w-5"></i><span>Settings</span></a>
                         <a href="${pageContext.request.contextPath}/admin/csv.jsp" class="nav-item"><i class="fa-solid fa-file-csv w-5"></i><span>CSV Import/Export</span></a>
                         <a href="${pageContext.request.contextPath}/admin/profile.jsp" class="nav-item"><i class="fa-solid fa-user-gear w-5"></i><span>Profile</span></a>
                     </nav>
                     <div class="mt-auto pt-6 border-t border-white/40"><a href="${pageContext.request.contextPath}/logout" class="w-full flex items-center justify-center gap-3 px-5 py-3 rounded-2xl text-gray-600 hover:bg-red-50 hover:text-red-600 transition"><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></a></div>
                 </div>
             </aside>
-                
-                
+
+
             <div class="main">
                 <header class="header"><h2 class="text-2xl font-semibold">System Settings</h2><today:today/></header>
                 <div class="content">
@@ -210,117 +210,117 @@
             </div>
         </div>
         <script>
-    const contextPath = '<%= request.getContextPath()%>';
-    let allClinics = [];
-    let selectedClinicIds = new Set();
+            const contextPath = '<%= request.getContextPath()%>';
+            let allClinics = [];
+            let selectedClinicIds = new Set();
 
-    function loadSettings() {
-        fetch(contextPath + '/admin/settingsData', {credentials: 'same-origin'})
-                .then(res => res.json())
-                .then(data => {
-                    const settings = data.settings || {};
-                    document.getElementById('st-max').value = settings.max_active_bookings_per_patient || '3';
-                    document.getElementById('st-cancel').value = settings.cancel_deadline_hours || '24';
-                    const queueCheck = document.getElementById('st-queue');
-                    queueCheck.checked = settings.same_day_queue_enabled === '1';
-                    document.getElementById('st-approval').checked = settings.booking_approval_required === '1';
-                    document.getElementById('walkin-clinics-section').style.display = queueCheck.checked ? 'block' : 'none';
-                    allClinics = data.clinics || [];
-                    renderClinicCheckboxes();
-                    const enabledStr = settings.walkin_enabled_clinics || '';
-                    selectedClinicIds.clear();
-                    enabledStr.split(',').forEach(idStr => {
-                        let id = parseInt(idStr.trim());
-                        if (!isNaN(id))
-                            selectedClinicIds.add(id);
-                    });
-                    updateCheckboxStates();
-                }).catch(err => Swal.fire('Error', 'Cannot load settings', 'error'));
-    }
+            function loadSettings() {
+                fetch(contextPath + '/admin/settingsData', {credentials: 'same-origin'})
+                        .then(res => res.json())
+                        .then(data => {
+                            const settings = data.settings || {};
+                            document.getElementById('st-max').value = settings.max_active_bookings_per_patient || '3';
+                            document.getElementById('st-cancel').value = settings.cancel_deadline_hours || '24';
+                            const queueCheck = document.getElementById('st-queue');
+                            queueCheck.checked = settings.same_day_queue_enabled === '1';
+                            document.getElementById('st-approval').checked = settings.booking_approval_required === '1';
+                            document.getElementById('walkin-clinics-section').style.display = queueCheck.checked ? 'block' : 'none';
+                            allClinics = data.clinics || [];
+                            renderClinicCheckboxes();
+                            const enabledStr = settings.walkin_enabled_clinics || '';
+                            selectedClinicIds.clear();
+                            enabledStr.split(',').forEach(idStr => {
+                                let id = parseInt(idStr.trim());
+                                if (!isNaN(id))
+                                    selectedClinicIds.add(id);
+                            });
+                            updateCheckboxStates();
+                        }).catch(err => Swal.fire('Error', 'Cannot load settings', 'error'));
+            }
 
-    function renderClinicCheckboxes() {
-        const container = document.getElementById('clinics-list');
-        if (!container)
-            return;
-        if (!allClinics.length) {
-            container.innerHTML = '<p class="text-gray-500">No active clinics found.</p>';
-            return;
-        }
-        let html = '';
-        allClinics.forEach(clinic => {
-            html += `<label class="flex items-center gap-3 p-2 rounded-lg hover:bg-white transition">
+            function renderClinicCheckboxes() {
+                const container = document.getElementById('clinics-list');
+                if (!container)
+                    return;
+                if (!allClinics.length) {
+                    container.innerHTML = '<p class="text-gray-500">No active clinics found.</p>';
+                    return;
+                }
+                let html = '';
+                allClinics.forEach(clinic => {
+                    html += `<label class="flex items-center gap-3 p-2 rounded-lg hover:bg-white transition">
             <input type="checkbox" class="clinic-checkbox" value="\${clinic.id}">
             <span class="text-gray-700">\${escapeHtml(clinic.name)}</span>
         </label>`;
-        });
-        container.innerHTML = html;
-        document.querySelectorAll('.clinic-checkbox').forEach(cb => {
-            cb.addEventListener('change', function () {
-                let id = parseInt(this.value);
-                if (this.checked)
-                    selectedClinicIds.add(id);
-                else
-                    selectedClinicIds.delete(id);
-            });
-        });
-    }
+                });
+                container.innerHTML = html;
+                document.querySelectorAll('.clinic-checkbox').forEach(cb => {
+                    cb.addEventListener('change', function () {
+                        let id = parseInt(this.value);
+                        if (this.checked)
+                            selectedClinicIds.add(id);
+                        else
+                            selectedClinicIds.delete(id);
+                    });
+                });
+            }
 
-    function updateCheckboxStates() {
-        document.querySelectorAll('.clinic-checkbox').forEach(cb => {
-            let id = parseInt(cb.value);
-            cb.checked = selectedClinicIds.has(id);
-        });
-    }
+            function updateCheckboxStates() {
+                document.querySelectorAll('.clinic-checkbox').forEach(cb => {
+                    let id = parseInt(cb.value);
+                    cb.checked = selectedClinicIds.has(id);
+                });
+            }
 
-    function escapeHtml(str) {
-        if (!str)
-            return '';
-        return str.replace(/[&<>]/g, function (m) {
-            if (m === '&')
-                return '&amp;';
-            if (m === '<')
-                return '&lt;';
-            if (m === '>')
-                return '&gt;';
-            return m;
-        });
-    }
+            function escapeHtml(str) {
+                if (!str)
+                    return '';
+                return str.replace(/[&<>]/g, function (m) {
+                    if (m === '&')
+                        return '&amp;';
+                    if (m === '<')
+                        return '&lt;';
+                    if (m === '>')
+                        return '&gt;';
+                    return m;
+                });
+            }
 
-    function saveSettings() {
-        const maxActive = document.getElementById('st-max').value;
-        const cancelHours = document.getElementById('st-cancel').value;
-        const queueEnabled = document.getElementById('st-queue').checked ? '1' : '0';
-        const approvalRequired = document.getElementById('st-approval').checked ? '1' : '0';
-        const selectedClinics = Array.from(selectedClinicIds).join(',');
-        const formData = new URLSearchParams();
-        formData.append('max_active_bookings_per_patient', maxActive);
-        formData.append('cancel_deadline_hours', cancelHours);
-        formData.append('same_day_queue_enabled', queueEnabled);
-        formData.append('booking_approval_required', approvalRequired);
-        formData.append('walkin_enabled_clinics', selectedClinics);
-        fetch(contextPath + '/admin/settings/save', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-            body: formData,
-            credentials: 'same-origin'
-        })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        Swal.fire('Saved', data.message, 'success');
-                        loadSettings();
-                    } else {
-                        Swal.fire('Error', data.message || 'Save failed', 'error');
-                    }
+            function saveSettings() {
+                const maxActive = document.getElementById('st-max').value;
+                const cancelHours = document.getElementById('st-cancel').value;
+                const queueEnabled = document.getElementById('st-queue').checked ? '1' : '0';
+                const approvalRequired = document.getElementById('st-approval').checked ? '1' : '0';
+                const selectedClinics = Array.from(selectedClinicIds).join(',');
+                const formData = new URLSearchParams();
+                formData.append('max_active_bookings_per_patient', maxActive);
+                formData.append('cancel_deadline_hours', cancelHours);
+                formData.append('same_day_queue_enabled', queueEnabled);
+                formData.append('booking_approval_required', approvalRequired);
+                formData.append('walkin_enabled_clinics', selectedClinics);
+                fetch(contextPath + '/admin/settings/save', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: formData,
+                    credentials: 'same-origin'
                 })
-                .catch(err => Swal.fire('Error', 'Network error', 'error'));
-    }
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire('Saved', data.message, 'success');
+                                loadSettings();
+                            } else {
+                                Swal.fire('Error', data.message || 'Save failed', 'error');
+                            }
+                        })
+                        .catch(err => Swal.fire('Error', 'Network error', 'error'));
+            }
 
-    document.getElementById('st-queue').addEventListener('change', function (e) {
-        document.getElementById('walkin-clinics-section').style.display = e.target.checked ? 'block' : 'none';
-    });
-    document.getElementById('save-settings-btn').addEventListener('click', saveSettings);
-    loadSettings();
+            document.getElementById('st-queue').addEventListener('change', function (e) {
+                document.getElementById('walkin-clinics-section').style.display = e.target.checked ? 'block' : 'none';
+            });
+            document.getElementById('save-settings-btn').addEventListener('click', saveSettings);
+            loadSettings();
         </script>
     </body>
 </html>

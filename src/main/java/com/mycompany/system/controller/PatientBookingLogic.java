@@ -1,5 +1,6 @@
 package com.mycompany.system.controller;
 
+import com.mycompany.system.dao.PatientDashboardDao;
 import com.mycompany.system.model.LoginUser;
 import com.mycompany.system.util.DBUtil;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,8 +16,9 @@ public class PatientBookingLogic {
 
     public void handleBooking(HttpServletRequest request, HttpServletResponse response) throws IOException {
         Connection conn = null;
+        PatientDashboardDao dao = new PatientDashboardDao();
+
         try {
-            // 1. 权限校验
             HttpSession session = request.getSession(false);
             if (session == null || session.getAttribute("loginUser") == null ||
                     !"patient".equals(session.getAttribute("role"))) {
@@ -27,7 +29,6 @@ public class PatientBookingLogic {
             LoginUser loginUser = (LoginUser) session.getAttribute("loginUser");
             Long patientId = loginUser.getId();
 
-            // 2. 获取参数
             Long clinicId = parseLong(request.getParameter("clinicId"));
             String regDate = request.getParameter("regDate");
             String slotTime = request.getParameter("slotTime");
@@ -54,18 +55,25 @@ public class PatientBookingLogic {
             conn = DBUtil.getConnection();
             conn.setAutoCommit(false);
 
-            // 3. 校验诊所时段容量（使用 registration.slot_time）
+            // ========== 检查当前活跃预约数 ==========
+            int maxActive = dao.getMaxActiveBookingsPerPatient();
+            int activeCount = getActiveBookingCount(conn, patientId);
+            if (activeCount >= maxActive) {
+                rollback(conn);
+                writeJson(response, HttpServletResponse.SC_BAD_REQUEST, false,
+                        "You already have " + activeCount + " active bookings. Maximum allowed: " + maxActive);
+                return;
+            }
+
             if (!checkClinicSlotCapacity(conn, clinicId, regDate, slotTime, response)) {
                 return;
             }
 
-            // 4. 获取该诊所对应的医生（必须包含 department_id）
             DoctorInfo doctorInfo = getDoctorByClinic(conn, clinicId, response);
             if (doctorInfo == null) {
                 return;
             }
 
-            // 5. 生成排队号（按诊所+日期）
             int nextQueueNo = getNextQueueNoForClinic(conn, regDate, clinicId);
             if (nextQueueNo == -1) {
                 rollback(conn);
@@ -73,13 +81,11 @@ public class PatientBookingLogic {
                 return;
             }
 
-            // 6. 插入预约记录（务必包含 department_id, slot_time, clinic_id）
             String regNo = "REG" + System.currentTimeMillis();
             if (!insertRegistration(conn, regNo, patientId, clinicId, doctorInfo, regDate, nextQueueNo, slotTime, response)) {
                 return;
             }
 
-            // 7. 插入通知（不扣费）
             insertSuccessNotification(conn, patientId, regNo, regDate);
 
             conn.commit();
@@ -96,7 +102,19 @@ public class PatientBookingLogic {
         }
     }
 
-    // 校验诊所时段容量（基于 clinic_time_slot 和 registration 的 slot_time 列）
+    // 获取当前患者的活跃预约数量 (status: 1=Booked, 3=Called, 4=Consulting)
+    private int getActiveBookingCount(Connection conn, Long patientId) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM registration WHERE patient_id = ? AND status IN (1,3,4)";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, patientId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        }
+        return 0;
+    }
+
+    // 校验诊所时段容量
     private boolean checkClinicSlotCapacity(Connection conn, Long clinicId, String regDate, String slotTime, HttpServletResponse response) throws SQLException, IOException {
         String sql = "SELECT cts.capacity, " +
                 "(SELECT COUNT(*) FROM registration r " +
@@ -129,7 +147,7 @@ public class PatientBookingLogic {
         return true;
     }
 
-    // 获取诊所固定医生（必须包含 department_id）
+    // 获取诊所的固定医生（含科室ID）
     private DoctorInfo getDoctorByClinic(Connection conn, Long clinicId, HttpServletResponse response) throws SQLException, IOException {
         String sql = "SELECT id, register_fee, department_id FROM doctor WHERE primary_clinic_id = ? AND status = 1 LIMIT 1";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -143,16 +161,13 @@ public class PatientBookingLogic {
                 long doctorId = rs.getLong("id");
                 double fee = rs.getDouble("register_fee");
                 long departmentId = rs.getLong("department_id");
-                // 如果 departmentId 为 0（理论上不会，因为 doctor 表 department_id NOT NULL），则使用默认科室 1
-                if (departmentId == 0) {
-                    departmentId = 1;
-                }
+                if (departmentId == 0) departmentId = 1;
                 return new DoctorInfo(doctorId, fee, departmentId);
             }
         }
     }
 
-    // 生成排队号（按诊所+日期）
+    // 生成排队号
     private int getNextQueueNoForClinic(Connection conn, String regDate, Long clinicId) throws SQLException {
         String sql = "SELECT COALESCE(MAX(queue_no), 0) + 1 FROM registration WHERE reg_date = ? AND clinic_id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -165,11 +180,10 @@ public class PatientBookingLogic {
         return 1;
     }
 
-    // 插入预约记录（明确提供所有 NOT NULL 字段）
+    // 插入预约记录
     private boolean insertRegistration(Connection conn, String regNo, Long patientId, Long clinicId,
                                        DoctorInfo doctorInfo, String regDate, int queueNo,
                                        String slotTime, HttpServletResponse response) throws SQLException, IOException {
-        // 注意：department_id 从 doctorInfo 获取，不能为 NULL
         String sql = "INSERT INTO registration (reg_no, patient_id, clinic_id, doctor_id, department_id, reg_date, queue_no, fee, slot_time, status, create_time, update_time) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), NOW())";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -177,7 +191,7 @@ public class PatientBookingLogic {
             ps.setLong(2, patientId);
             ps.setLong(3, clinicId);
             ps.setLong(4, doctorInfo.getDoctorId());
-            ps.setLong(5, doctorInfo.getDepartmentId());   // 关键：必须非 NULL
+            ps.setLong(5, doctorInfo.getDepartmentId());
             ps.setString(6, regDate);
             ps.setInt(7, queueNo);
             ps.setDouble(8, doctorInfo.getFee());
@@ -191,6 +205,7 @@ public class PatientBookingLogic {
         }
     }
 
+    // 插入成功通知
     private void insertSuccessNotification(Connection conn, Long patientId, String regNo, String regDate) throws SQLException {
         String sql = "INSERT INTO user_notification (user_id, user_type, title, message, type, is_read, create_time) " +
                 "VALUES (?, 3, ?, ?, 'success', 0, NOW())";
@@ -229,7 +244,6 @@ public class PatientBookingLogic {
         response.getWriter().write(json);
     }
 
-    // 内部类封装医生信息
     private static class DoctorInfo {
         private final Long doctorId;
         private final double fee;

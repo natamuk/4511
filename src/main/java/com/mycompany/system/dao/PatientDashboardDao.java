@@ -392,4 +392,26 @@ public class PatientDashboardDao {
         }
         return result;
     }
+    
+        // 获取最大活跃预约数限制（来自 system_setting 表）
+    public int getMaxActiveBookingsPerPatient() {
+        Map<String, String> settings = getSettings();
+        String val = settings.getOrDefault("max_active_bookings_per_patient", "3");
+        try {
+            return Integer.parseInt(val);
+        } catch (NumberFormatException e) {
+            return 3;
+        }
+    }
+
+    // 获取取消截止小时数（来自 system_setting 表）
+    public int getCancelDeadlineHours() {
+        Map<String, String> settings = getSettings();
+        String val = settings.getOrDefault("cancel_deadline_hours", "24");
+        try {
+            return Integer.parseInt(val);
+        } catch (NumberFormatException e) {
+            return 24;
+        }
+    }
 }

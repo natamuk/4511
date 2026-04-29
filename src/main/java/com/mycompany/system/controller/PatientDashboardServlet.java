@@ -42,5 +42,7 @@ public class PatientDashboardServlet extends HttpServlet {
         request.setAttribute("notifications", notifications);
 
         request.getRequestDispatcher("/patient/dashboard.jsp").forward(request, response);
+        
+        
     }
 }

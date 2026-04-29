@@ -89,12 +89,12 @@
                 </div>
             </div>
             <nav class="space-y-1">
-                <a href="${pageContext.request.contextPath}/admin/dashboard.jsp" class="nav-item active"><i class="fa-solid fa-chart-pie w-5"></i><span>Dashboard</span></a>
+                <a href="${pageContext.request.contextPath}/admin/dashboard.jsp" class="nav-item "><i class="fa-solid fa-chart-pie w-5"></i><span>Dashboard</span></a>
                 <a href="${pageContext.request.contextPath}/admin/users.jsp" class="nav-item"><i class="fa-solid fa-users w-5"></i><span>User Management</span></a>
-                <a href="${pageContext.request.contextPath}/admin/appointments.jsp" class="nav-item"><i class="fa-solid fa-calendar-check w-5"></i><span>Appointments</span></a>
-                <a href="${pageContext.request.contextPath}/admin/queue.jsp" class="nav-item"><i class="fa-solid fa-list-ol w-5"></i><span>Queue</span></a>
                 <a href="${pageContext.request.contextPath}/admin/quota.jsp" class="nav-item"><i class="fa-solid fa-server w-5"></i><span>Services & Quota</span></a>
+                <a href="${pageContext.request.contextPath}/admin/clinic_config.jsp" class="nav-item"><i class="fa-solid fa-building"></i><span>Clinic & Services</span></a>
                 <a href="${pageContext.request.contextPath}/admin/reports.jsp" class="nav-item"><i class="fa-solid fa-chart-bar w-5"></i><span>Reports</span></a>
+                <a href="${pageContext.request.contextPath}/admin/abnormal_records.jsp" class="nav-item"><i class="fa-solid fa-exclamation-triangle"></i><span>Abnormal Records</span></a>
                 <a href="${pageContext.request.contextPath}/admin/logs.jsp" class="nav-item"><i class="fa-solid fa-clipboard-list w-5"></i><span>Audit Logs</span></a>
                 <a href="${pageContext.request.contextPath}/admin/notifications.jsp" class="nav-item"><i class="fa-solid fa-bell w-5"></i><span>Notifications</span></a>
                 <a href="${pageContext.request.contextPath}/admin/settings.jsp" class="nav-item"><i class="fa-solid fa-sliders w-5"></i><span>Settings</span></a>
@@ -113,7 +113,6 @@
         <header class="glass border-b px-8 py-4 flex justify-between items-center">
             <h2 class="text-2xl font-semibold">Dashboard</h2>
             <div class="flex items-center gap-3">
-                <span id="current-date" class="text-sm text-gray-500"></span>
                 <today:today />
             </div>
         </header>
@@ -124,7 +123,6 @@
                     <div><h1 class="text-4xl font-bold text-gray-800 mb-2">Admin Console</h1><p class="text-gray-500">Monitor clinic operations, appointment trends, and system events</p></div>
                     <div class="flex gap-3 flex-wrap items-center">
                         <a href="${pageContext.request.contextPath}/admin/users.jsp" class="px-4 py-2 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition">Add User</a>
-                        <a href="${pageContext.request.contextPath}/admin/appointments.jsp" class="px-4 py-2 rounded-xl bg-white border hover:bg-gray-50 transition text-gray-700 font-medium shadow-sm">Appointments</a>
                         <a href="${pageContext.request.contextPath}/admin/reports.jsp" class="px-4 py-2 rounded-xl bg-white border hover:bg-gray-50 transition text-gray-700 font-medium shadow-sm">View Reports</a>
                     </div>
                 </div>

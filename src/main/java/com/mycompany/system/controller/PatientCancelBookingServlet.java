@@ -9,11 +9,13 @@ import com.mycompany.system.bean.UserNotificationBean;
 import com.mycompany.system.db.RegistrationDB;
 import com.mycompany.system.db.UserNotificationDB;
 import com.mycompany.system.model.LoginUser;
+import com.mycompany.system.dao.PatientDashboardDao;
 import com.google.gson.Gson;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,14 +27,12 @@ public class PatientCancelBookingServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // 统一处理 POST 请求（同时处理 AJAX 和普通表单）
         handleRequest(request, response);
     }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // 保留 GET 方式兼容旧代码（但建议前端全部改用 POST）
         handleRequest(request, response);
     }
 
@@ -89,6 +89,22 @@ public class PatientCancelBookingServlet extends HttpServlet {
                 return;
             }
 
+            PatientDashboardDao dao = new PatientDashboardDao();
+            int deadlineHours = dao.getCancelDeadlineHours();
+            Timestamp appointmentDateTime = getAppointmentDateTime(reg.getRegDate(), reg.getSlotTime());
+            Timestamp now = new Timestamp(System.currentTimeMillis());
+            long hoursDiff = (appointmentDateTime.getTime() - now.getTime()) / (3600_000L);
+            if (hoursDiff < deadlineHours) {
+                String errorMsg = "You can only cancel at least " + deadlineHours + " hours before the appointment time.";
+                if (isAjax) {
+                    writeJson(response, false, errorMsg);
+                } else {
+                    request.setAttribute("error", errorMsg);
+                    forwardToMyAppointments(request, response);
+                }
+                return;
+            }
+
             boolean success = RegistrationDB.cancelBooking(registrationId, reg.getScheduleId());
 
             if (success) {
@@ -124,6 +140,18 @@ public class PatientCancelBookingServlet extends HttpServlet {
                 forwardToMyAppointments(request, response);
             }
         }
+    }
+
+    private Timestamp getAppointmentDateTime(java.sql.Date regDate, String slotTime) {
+        if (regDate == null || slotTime == null || slotTime.trim().isEmpty()) {
+            return new Timestamp(System.currentTimeMillis()); // fallback, should not happen
+        }
+        String time = slotTime.trim();
+        if (time.length() == 5 && time.indexOf(':') == 2) {
+            time = time + ":00";
+        }
+        String dateTimeStr = regDate.toString() + " " + time;
+        return Timestamp.valueOf(dateTimeStr);
     }
 
     private void forwardToMyAppointments(HttpServletRequest request, HttpServletResponse response)
