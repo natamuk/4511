@@ -30,12 +30,8 @@ public class DoctorActionServlet extends HttpServlet {
             respondJson(response, false, "Unauthorized", HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
-        if (action == null) {
-            respondJson(response, false, "Missing action", HttpServletResponse.SC_BAD_REQUEST);
-            return;
-        }
-        if (!"callnext".equalsIgnoreCase(action) && id == null) {
-            respondJson(response, false, "Missing id", HttpServletResponse.SC_BAD_REQUEST);
+        if (action == null || id == null) {
+            respond(request, response, false, "Missing parameters", HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
 
@@ -97,16 +93,38 @@ public class DoctorActionServlet extends HttpServlet {
         respondJson(response, success, message, success ? HttpServletResponse.SC_OK : HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
     }
 
-    private void respondJson(HttpServletResponse response, boolean success, String message, int statusCode) throws IOException {
-        response.setContentType("application/json;charset=UTF-8");
-        response.setStatus(statusCode);
-        Map<String, Object> r = new HashMap<>();
-        r.put("success", success);
-        if (!success) r.put("message", message == null ? "Operation failed" : message);
-        response.getWriter().write(gson.toJson(r));
+    private void respond(HttpServletRequest request, HttpServletResponse response, boolean success, String message, int successStatus) throws IOException {
+        String ajaxHeader = request.getHeader("X-Requested-With");
+        String accept = request.getHeader("Accept");
+        boolean wantsJson = (ajaxHeader != null && "XMLHttpRequest".equalsIgnoreCase(ajaxHeader))
+                || (accept != null && accept.contains("application/json"))
+                || "true".equalsIgnoreCase(request.getParameter("ajax"));
+
+        if (wantsJson) {
+            response.setContentType("application/json;charset=UTF-8");
+            response.setStatus(success ? successStatus : HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            Map<String, Object> r = new HashMap<>();
+            r.put("success", success);
+            if (!success) r.put("message", message == null ? "Operation failed" : message);
+            response.getWriter().write(gson.toJson(r));
+        } else {
+            HttpSession session = request.getSession(true);
+            if (success) session.setAttribute("flash_success", "Operation succeeded");
+            else session.setAttribute("flash_error", message == null ? "Operation failed" : message);
+            String referer = request.getHeader("Referer");
+            if (referer == null || referer.isBlank()) {
+                response.sendRedirect(request.getContextPath() + "/doctor/dashboard");
+            } else {
+                response.sendRedirect(referer);
+            }
+        }
     }
 
     private Long parseLong(String v) {
         try { return v == null ? null : Long.parseLong(v); } catch (Exception e) { return null; }
+    }
+
+    private void respondJson(HttpServletResponse response, boolean b, String unauthorized, int SC_UNAUTHORIZED) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 }

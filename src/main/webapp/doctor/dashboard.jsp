@@ -13,17 +13,10 @@
     String dept = (profile != null && profile.get("departmentName") != null) ? profile.get("departmentName").toString() : "General";
     String avatar = (profile != null && profile.get("avatar") != null) ? profile.get("avatar").toString() : "https://picsum.photos/200";
     String clinicName = (profile != null && profile.get("clinicName") != null) ? profile.get("clinicName").toString() : title;
-    if (stats == null) {
-        stats = new HashMap<>();
-    }
-    if (appointments == null) {
-        appointments = new ArrayList<>();
-    }
-    if (queueList == null) {
-        queueList = new ArrayList<>();
-    }
-    if (notifications == null)
-        notifications = new ArrayList<>();
+    if (stats == null) stats = new HashMap<>();
+    if (appointments == null) appointments = new ArrayList<>();
+    if (queueList == null) queueList = new ArrayList<>();
+    if (notifications == null) notifications = new ArrayList<>();
 %>
 <!DOCTYPE html>
 <html>
@@ -34,12 +27,8 @@
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <style>
             @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap');
-            * {
-                box-sizing: border-box;
-            }
-            html {
-                scroll-behavior: smooth;
-            }
+            * { box-sizing: border-box; }
+            html { scroll-behavior: smooth; }
             body {
                 font-family: 'Noto Sans TC', sans-serif;
                 background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%);
@@ -47,9 +36,8 @@
             .glass {
                 background: rgba(255, 255, 255, 0.95);
                 border: 1px solid rgba(255, 255, 255, 0.6);
-                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+                box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
                 backdrop-filter: blur(4px);
-                -webkit-backdrop-filter: blur(4px);
                 transform: translateZ(0);
             }
             .nav-item {
@@ -64,16 +52,6 @@
                 background: rgba(14,165,233,0.14);
                 color: #0369a1;
                 font-weight: 700;
-            }
-            .status-badge {
-                display: inline-flex;
-                align-items: center;
-                gap: .35rem;
-                padding: .35rem .75rem;
-                border-radius: 9999px;
-                font-size: .75rem;
-                font-weight: 700;
-                white-space: nowrap;
             }
             .card {
                 background: white;
@@ -94,34 +72,16 @@
                 text-align: center;
                 box-shadow: 0 1px 2px rgba(0,0,0,0.05);
             }
-            table {
-                width: 100%;
-                border-collapse: collapse;
-            }
-            th, td {
-                padding: 0.75rem;
-                text-align: left;
-                border-bottom: 1px solid #e2e8f0;
-            }
-            th {
-                background-color: #f8fafc;
-                font-weight: 600;
-            }
-            button {
-                transition: all 0.15s ease;
-                padding: 0.5rem 1rem;
-                border-radius: 0.5rem;
-                cursor: pointer;
-                border: none;
-            }
-            .btn-primary {
-                background-color: #3b82f6;
-                color: white;
-            }
+            table { width: 100%; border-collapse: collapse; }
+            th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
+            th { background-color: #f8fafc; font-weight: 600; }
+            button { transition: all 0.15s ease; padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer; border: none; }
+            .btn-primary { background-color: #3b82f6; color: white; }
         </style>
     </head>
     <body class="min-h-screen">
         <div class="flex h-screen overflow-hidden relative">
+            <!-- 左侧导航栏 -->
             <div class="w-80 glass shadow-2xl flex flex-col border-r border-white/50 z-40 fixed h-full">
                 <div class="p-6 bg-gradient-to-r from-sky-700 to-blue-700">
                     <div class="flex items-center gap-3">
@@ -132,7 +92,7 @@
                 <div class="p-6 flex-1 flex flex-col overflow-y-auto">
                     <div class="flex items-center gap-4 p-4 glass rounded-3xl mb-8">
                         <img src="<%= avatar%>" class="w-14 h-14 rounded-2xl ring-4 ring-white object-cover" alt="avatar">
-                        <div><p class="font-semibold"><%= realName%></p><p class="text-sky-600 text-sm"><%= clinicName%></p></p></div>
+                        <div><p class="font-semibold"><%= realName%></p><p class="text-sky-600 text-sm"><%= clinicName%></p></div>
                     </div>
                     <nav class="flex flex-col gap-1">
                         <a href="<%= ctx%>/doctor/dashboard" class="nav-item flex items-center gap-3 px-5 py-3 rounded-2xl active"><i class="fa-solid fa-chart-pie w-5"></i><span>Dashboard</span></a>
@@ -150,6 +110,7 @@
                     </div>
                 </div>
             </div>
+            <!-- 右侧内容 -->
             <div class="flex-1 flex flex-col min-w-0 ml-80">
                 <div class="flex-1 overflow-auto p-4 md:p-8">
                     <div class="max-w-6xl mx-auto">
@@ -187,23 +148,21 @@
         <script>
             document.getElementById('checkinBtn').addEventListener('click', function () {
                 fetch('<%= ctx%>/doctor/checkin', {method: 'POST', body: 'action=checkin'})
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.success) {
-                                document.getElementById('checkin-status').innerHTML = 'Checked in at ' + data.checkinTime;
-                                document.getElementById('checkinBtn').disabled = true;
-                                Swal.fire('Success', data.message, 'success');
-                            } else if (data.alreadyChecked) {
-                                document.getElementById('checkin-status').innerHTML = 'Checked in at ' + data.checkinTime;
-                                document.getElementById('checkinBtn').disabled = true;
-                                Swal.fire('Info', data.message, 'info');
-                            } else {
-                                Swal.fire('Error', data.message, 'error');
-                            }
-                        })
-                        .catch(err => {
-                            Swal.fire('Network Error', 'Please try again later.', 'error');
-                        });
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            document.getElementById('checkin-status').innerHTML = 'Checked in at ' + data.checkinTime;
+                            document.getElementById('checkinBtn').disabled = true;
+                            Swal.fire('Success', data.message, 'success');
+                        } else if (data.alreadyChecked) {
+                            document.getElementById('checkin-status').innerHTML = 'Checked in at ' + data.checkinTime;
+                            document.getElementById('checkinBtn').disabled = true;
+                            Swal.fire('Info', data.message, 'info');
+                        } else {
+                            Swal.fire('Error', data.message, 'error');
+                        }
+                    })
+                    .catch(err => Swal.fire('Network Error', 'Please try again later.', 'error'));
             });
         </script>
     </body>

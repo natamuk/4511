@@ -108,6 +108,13 @@
     <div class="flex-1 flex flex-col min-w-0">
         <header class="glass border-b px-8 py-4 flex justify-between items-center"><h2 class="text-2xl font-semibold">User Management</h2><div class="flex items-center gap-3"><today:today/></div></header>
         <div class="flex-1 overflow-auto p-4 md:p-8">
+            <!-- Success / Error Message -->
+            <% if (request.getAttribute("success") != null) { %>
+                <div class="bg-green-100 border border-green-400 text-green-700 px-6 py-4 rounded-2xl mb-6 flex items-center gap-3">
+                    <i class="fa-solid fa-check-circle"></i>
+                    <%= request.getAttribute("success") %>
+                </div>
+            <% } %>
             <div class="space-y-8">
                 <!-- ADMIN -->
                 <div class="glass rounded-3xl p-8"><div class="flex items-center justify-between mb-6 border-b pb-4"><h3 class="text-2xl font-semibold text-gray-800">Admin Management</h3><a href="${pageContext.request.contextPath}/admin/add-user.jsp?role=admin" class="px-4 py-2 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700">Add Admin</a></div>

@@ -8,7 +8,7 @@
     String realName = (profile != null && profile.get("realName") != null) ? profile.get("realName").toString() : "Doctor";
     String title = (profile != null && profile.get("title") != null) ? profile.get("title").toString() : "Physician";
     String dept = (profile != null && profile.get("departmentName") != null) ? profile.get("departmentName").toString() : "General";
-        String clinicName = (profile != null && profile.get("clinicName") != null) ? profile.get("clinicName").toString() : title;
+    String clinicName = (profile != null && profile.get("clinicName") != null) ? profile.get("clinicName").toString() : title;
     String avatar = (profile != null && profile.get("avatar") != null) ? profile.get("avatar").toString() : "https://picsum.photos/200";
 %>
 <!DOCTYPE html>
@@ -51,7 +51,7 @@
 </head>
 <body class="min-h-screen">
 <div class="flex h-screen overflow-hidden relative">
-    <!-- 左側導航欄 -->
+    <!-- 左侧导航栏 -->
     <div class="w-80 glass shadow-2xl flex flex-col border-r border-white/50 z-40 fixed h-full">
         <div class="p-6 bg-gradient-to-r from-sky-700 to-blue-700">
             <div class="flex items-center gap-3">
@@ -80,7 +80,7 @@
             </div>
         </div>
     </div>
-    <!-- 右側內容區 -->
+    <!-- 右侧内容 -->
     <div class="flex-1 flex flex-col min-w-0 ml-80">
         <div class="flex-1 overflow-auto p-4 md:p-8">
             <div class="max-w-6xl mx-auto">
@@ -89,7 +89,9 @@
                     <button id="callNextBtn" class="btn-primary mb-4">Call Next</button>
                     <div class="overflow-x-auto">
                         <table class="min-w-full">
-                            <thead><tr><th>Ticket</th><th>Patient</th><th>Service</th><th>Status</th><th>Action</th></tr></thead>
+                            <thead>
+                                <tr><th>Ticket</th><th>Patient</th><th>Service</th><th>Status</th><th>Action</th></tr>
+                            </thead>
                             <tbody>
                                 <% for (Map<String, Object> q : queueList) {
                                     String source = (String) q.get("source");

@@ -14,57 +14,58 @@ import java.io.IOException;
 
 @WebServlet("/patient/update-profile")
 public class PatientProfileUpdateServlet extends HttpServlet {
+
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
         HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("loginUser") == null || !"patient".equals(session.getAttribute("role"))) {
-            writeJson(response, 401, false, "Unauthorized");
+        if (session == null || session.getAttribute("loginUser") == null ||
+                !"patient".equals(session.getAttribute("role"))) {
+            response.sendRedirect(request.getContextPath() + "/login.jsp");
             return;
         }
 
-        Long patientId = ((LoginUser) session.getAttribute("loginUser")).getId();
-        String name = request.getParameter("name");
-        String phone = request.getParameter("phone");
-        String email = request.getParameter("email");
-        String address = request.getParameter("address");
-        String avatar = request.getParameter("avatar");  
-        String oldPwd = request.getParameter("oldPwd");
-        String newPwd = request.getParameter("newPwd");
+        LoginUser loginUser = (LoginUser) session.getAttribute("loginUser");
+        Long patientId = loginUser.getId();
+        String action = request.getParameter("action");
 
         try {
-            if (newPwd != null && !newPwd.trim().isEmpty()) {
+            if ("changePassword".equals(action)) {
+                // Password Change
+                String oldPwd = request.getParameter("oldPwd");
+                String newPwd = request.getParameter("newPwd");
+
                 PatientBean patient = PatientDB.getById(patientId);
                 if (patient == null || !patient.getPassword().equals(oldPwd)) {
-                    writeJson(response, 400, false, "Incorrect current password");
-                    return;
+                    request.setAttribute("error", "Current password is incorrect");
+                } else if (PatientDB.updatePassword(patientId, newPwd)) {
+                    request.setAttribute("success", "Password updated successfully");
+                } else {
+                    request.setAttribute("error", "Failed to update password");
                 }
-                if (!PatientDB.updatePassword(patientId, newPwd)) {
-                    writeJson(response, 500, false, "Failed to update password");
-                    return;
-                }
-            }
-
-            PatientBean updateBean = new PatientBean();
-            updateBean.setId(patientId);
-            updateBean.setRealName(name);
-            updateBean.setPhone(phone);
-            updateBean.setEmail(email);
-            updateBean.setAddress(address);
-            if (avatar != null) updateBean.setAvatar(avatar);
-            if (PatientDB.update(updateBean)) {
-                writeJson(response, 200, true, "Profile updated successfully");
             } else {
-                writeJson(response, 500, false, "Failed to update profile");
+                // Profile Update
+                PatientBean patient = new PatientBean();
+                patient.setId(patientId);
+                patient.setRealName(request.getParameter("realName"));
+                patient.setPhone(request.getParameter("phone"));
+                patient.setEmail(request.getParameter("email"));
+                patient.setAddress(request.getParameter("address"));
+
+                if (PatientDB.update(patient)) {
+                    request.setAttribute("success", "Profile updated successfully");
+                    request.getRequestDispatcher("/patient/profile.jsp").forward(request, response);
+                } else {
+                    request.setAttribute("error", "Failed to update profile");
+                    request.getRequestDispatcher("/patient/profile.jsp").forward(request, response);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
-            writeJson(response, 500, false, "Server error");
+            request.setAttribute("error", "Server error occurred");
         }
-    }
 
-    private void writeJson(HttpServletResponse response, int status, boolean success, String message) throws IOException {
-        response.setStatus(status);
-        response.setContentType("application/json;charset=UTF-8");
-        response.getWriter().write("{\"success\":" + success + ",\"message\":\"" + message.replace("\"", "\\\"") + "\"}");
+        response.sendRedirect(request.getContextPath() + "/patient/profile");
     }
 }

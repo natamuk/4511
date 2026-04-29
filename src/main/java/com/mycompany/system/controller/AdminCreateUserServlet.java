@@ -84,7 +84,7 @@ public class AdminCreateUserServlet extends HttpServlet {
                 response.sendRedirect(request.getContextPath() + "/admin/dashboard");
             } else {
                 request.setAttribute("error", "Create user failed");
-                request.getRequestDispatcher("/admin/contents/add-user.jsp").forward(request, response);
+                request.getRequestDispatcher("/admin/add-user.jsp").forward(request, response);
             }
 
         } catch (Exception e) {
