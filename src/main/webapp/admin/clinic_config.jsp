@@ -101,13 +101,16 @@
                         </div>
                         <div class="overflow-x-auto">
                             <table class="w-full text-left">
-                                <thead class="bg-gray-50"><tr><th class="p-3">Name</th><th class="p-3">Location</th><th class="p-3">Status</th><th class="p-3">Actions</th></tr></thead>
+                                <thead class="bg-gray-50">
+                                    <tr><th class="p-3">Name</th><th class="p-3">Location</th><th class="p-3">Status</th><th class="p-3">Actions</th></tr>
+                                </thead>
                                 <tbody>
                                     <c:forEach var="c" items="${clinics}">
                                         <tr class="border-b"><td class="p-3">${c.clinicName}</td><td class="p-3">${c.location}</td><td class="p-3">${c.status == 1 ? 'Active' : 'Disabled'}</td>
                                             <td class="p-3"><button onclick="editClinic(${c.id}, '${c.clinicName}', '${c.location}', ${c.status})" class="text-indigo-600 mr-2">Edit</button>
-                                                <button onclick="deleteClinic(${c.id})" class="text-red-600">Delete</button></td></tr>
-                                            </c:forEach>
+                                                <button onclick="deleteClinic(${c.id})" class="text-red-600">Delete</button></td>
+                                        </tr>
+                                    </c:forEach>
                                 </tbody>
                             </table>
                         </div>
@@ -121,13 +124,16 @@
                         </div>
                         <div class="overflow-x-auto">
                             <table class="w-full text-left">
-                                <thead class="bg-gray-50"><tr><th class="p-3">Name</th><th class="p-3">Code</th><th class="p-3">Description</th><th class="p-3">Actions</th></tr></thead>
+                                <thead class="bg-gray-50">
+                                    <tr><th class="p-3">Name</th><th class="p-3">Code</th><th class="p-3">Description</th><th class="p-3">Actions</th></tr>
+                                </thead>
                                 <tbody>
                                     <c:forEach var="d" items="${departments}">
                                         <tr class="border-b"><td class="p-3">${d.deptName}</td><td class="p-3">${d.deptCode}</td><td class="p-3">${d.description}</td>
                                             <td class="p-3"><button onclick="editDept(${d.id}, '${d.deptName}', '${d.deptCode}', '${d.description}')" class="text-indigo-600 mr-2">Edit</button>
-                                                <button onclick="deleteDept(${d.id})" class="text-red-600">Delete</button></td></tr>
-                                            </c:forEach>
+                                                <button onclick="deleteDept(${d.id})" class="text-red-600">Delete</button></td>
+                                        </tr>
+                                    </c:forEach>
                                 </tbody>
                             </table>
                         </div>
@@ -138,21 +144,24 @@
                         <h3 class="text-xl font-bold mb-4">Time Slot Capacity Settings</h3>
                         <form id="slotForm" action="${pageContext.request.contextPath}/admin/clinic/saveSlot" method="post" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                             <select name="clinicId" required class="px-3 py-2 border rounded"><option value="">Select Clinic</option><c:forEach var="c" items="${clinics}"><option value="${c.id}">${c.clinicName}</option></c:forEach></select>
-                                <select name="period" required class="px-3 py-2 border rounded"><option value="morning">Morning</option><option value="afternoon">Afternoon</option><option value="evening">Evening</option></select>
-                                <input type="text" name="slotTime" placeholder="Time (e.g., 09:00)" required class="px-3 py-2 border rounded">
-                                <input type="number" name="capacity" placeholder="Capacity" required class="px-3 py-2 border rounded">
-                                <button type="submit" class="md:col-span-4 px-6 py-2 bg-green-600 text-white rounded-xl">Add / Update Slot</button>
-                            </form>
-                            <hr class="my-6">
-                            <h4 class="font-bold mb-2">Existing Slots</h4>
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-left">
-                                    <thead class="bg-gray-50"><tr><th class="p-3">Clinic</th><th class="p-3">Period</th><th class="p-3">Time</th><th class="p-3">Capacity</th><th class="p-3">Actions</th></tr></thead>
-                                    <tbody>
+                            <select name="period" required class="px-3 py-2 border rounded"><option value="morning">Morning</option><option value="afternoon">Afternoon</option><option value="evening">Evening</option></select>
+                            <input type="text" name="slotTime" placeholder="Time (e.g., 09:00)" required class="px-3 py-2 border rounded">
+                            <input type="number" name="capacity" placeholder="Capacity" required class="px-3 py-2 border rounded">
+                            <button type="submit" class="md:col-span-4 px-6 py-2 bg-green-600 text-white rounded-xl">Add / Update Slot</button>
+                        </form>
+                        <hr class="my-6">
+                        <h4 class="font-bold mb-2">Existing Slots</h4>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left">
+                                <thead class="bg-gray-50">
+                                    <tr><th class="p-3">Clinic</th><th class="p-3">Period</th><th class="p-3">Time</th><th class="p-3">Capacity</th><th class="p-3">Actions</th></tr>
+                                </thead>
+                                <tbody>
                                     <c:forEach var="ts" items="${timeSlots}">
                                         <tr class="border-b"><td class="p-3">${ts.clinicId}</td><td class="p-3">${ts.period}</td><td class="p-3">${ts.slotTime}</td><td class="p-3">${ts.capacity}</td>
-                                            <td class="p-3"><button onclick="deleteSlot(${ts.id})" class="text-red-600">Delete</button></td></tr>
-                                        </c:forEach>
+                                            <td class="p-3"><button onclick="deleteSlot(${ts.id})" class="text-red-600">Delete</button></td>
+                                        </tr>
+                                    </c:forEach>
                                 </tbody>
                             </table>
                         </div>
@@ -178,13 +187,14 @@
                             body: 'name=' + encodeURIComponent(name) + '&location=' + encodeURIComponent(location)
                         }).then(res => res.json()).then(data => {
                             if (data.success)
-                                location.reload();
+                                window.location.reload();
                             else
                                 Swal.showValidationMessage(data.message);
                         });
                     }
                 });
             }
+
             function editClinic(id, name, location, status) {
                 Swal.fire({
                     title: 'Edit Clinic',
@@ -202,30 +212,40 @@
                             body: 'id=' + id + '&name=' + encodeURIComponent(newName) + '&location=' + encodeURIComponent(newLoc) + '&status=' + newStatus
                         }).then(res => res.json()).then(data => {
                             if (data.success)
-                                location.reload();
+                                window.location.reload();
                             else
                                 Swal.showValidationMessage(data.message);
                         });
                     }
                 });
             }
+
             function deleteClinic(id) {
-                Swal.fire({title: 'Confirm delete?', icon: 'warning', showCancelButton: true, preConfirm: () => {
-                        fetch('${pageContext.request.contextPath}/admin/clinic/delete', {method: 'POST', body: 'id=' + id, headers: {'Content-Type': 'application/x-www-form-urlencoded'}})
-                                .then(res => res.json()).then(data => {
+                Swal.fire({
+                    title: 'Confirm delete?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    preConfirm: () => {
+                        return fetch('${pageContext.request.contextPath}/admin/clinic/delete', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                            body: 'id=' + id
+                        }).then(res => res.json()).then(data => {
                             if (data.success)
-                                location.reload();
+                                window.location.reload();
                             else
                                 Swal.fire('Error', data.message, 'error');
                         });
-                    }});
+                    }
+                });
             }
+
             function openDeptModal() {
                 Swal.fire({
                     title: 'Add Medical Service',
                     html: '<input id="deptName" class="swal2-input" placeholder="Department Name">' +
-                            '<input id="deptCode" class="swal2-input" placeholder="Department Code">' +
-                            '<textarea id="deptDesc" class="swal2-textarea" placeholder="Description"></textarea>',
+                          '<input id="deptCode" class="swal2-input" placeholder="Department Code">' +
+                          '<textarea id="deptDesc" class="swal2-textarea" placeholder="Description"></textarea>',
                     preConfirm: () => {
                         let name = document.getElementById('deptName').value;
                         let code = document.getElementById('deptCode').value;
@@ -240,7 +260,7 @@
                             body: 'name=' + encodeURIComponent(name) + '&code=' + encodeURIComponent(code) + '&desc=' + encodeURIComponent(desc)
                         }).then(res => res.json()).then(data => {
                             if (data.success)
-                                location.reload();
+                                window.location.reload();
                             else
                                 Swal.showValidationMessage(data.message);
                         });
@@ -249,11 +269,15 @@
             }
 
             function editDept(id, name, code, desc) {
+                // 防止 null 传入 escapeHtml
+                var safeName = name == null ? '' : name;
+                var safeCode = code == null ? '' : code;
+                var safeDesc = desc == null ? '' : desc;
                 Swal.fire({
                     title: 'Edit Service',
-                    html: '<input id="deptName" class="swal2-input" value="' + escapeHtml(name) + '">' +
-                            '<input id="deptCode" class="swal2-input" value="' + escapeHtml(code) + '">' +
-                            '<textarea id="deptDesc" class="swal2-textarea">' + escapeHtml(desc) + '</textarea>',
+                    html: '<input id="deptName" class="swal2-input" value="' + escapeHtml(safeName) + '">' +
+                          '<input id="deptCode" class="swal2-input" value="' + escapeHtml(safeCode) + '">' +
+                          '<textarea id="deptDesc" class="swal2-textarea">' + escapeHtml(safeDesc) + '</textarea>',
                     preConfirm: () => {
                         let newName = document.getElementById('deptName').value;
                         let newCode = document.getElementById('deptCode').value;
@@ -264,7 +288,7 @@
                             body: 'id=' + id + '&name=' + encodeURIComponent(newName) + '&code=' + encodeURIComponent(newCode) + '&desc=' + encodeURIComponent(newDesc)
                         }).then(res => res.json()).then(data => {
                             if (data.success)
-                                location.reload();
+                                window.location.reload();
                             else
                                 Swal.showValidationMessage(data.message);
                         });
@@ -273,27 +297,62 @@
             }
 
             function deleteDept(id) {
-                Swal.fire({title: 'Confirm delete?', icon: 'warning', showCancelButton: true, preConfirm: () => {
-                        fetch('${pageContext.request.contextPath}/admin/department/delete', {method: 'POST', body: 'id=' + id, headers: {'Content-Type': 'application/x-www-form-urlencoded'}})
-                                .then(res => res.json()).then(data => {
+                Swal.fire({
+                    title: 'Confirm delete?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    preConfirm: () => {
+                        return fetch('${pageContext.request.contextPath}/admin/department/delete', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                            body: 'id=' + id
+                        }).then(res => res.json()).then(data => {
                             if (data.success)
-                                location.reload();
+                                window.location.reload();
                             else
                                 Swal.fire('Error', data.message, 'error');
                         });
-                    }});
+                    }
+                });
+            }
+
+            // 新增：删除时段
+            function deleteSlot(slotId) {
+                Swal.fire({
+                    title: 'Delete Time Slot?',
+                    text: 'This action cannot be undone.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    confirmButtonText: 'Yes, delete',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        fetch('${pageContext.request.contextPath}/admin/clinic/deleteSlot', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                            body: 'id=' + slotId
+                        }).then(res => res.json()).then(data => {
+                            if (data.success) {
+                                Swal.fire('Deleted!', data.message, 'success').then(() => {
+                                    window.location.reload();
+                                });
+                            } else {
+                                Swal.fire('Error', data.message, 'error');
+                            }
+                        }).catch(err => {
+                            Swal.fire('Error', 'Network error: ' + err.message, 'error');
+                        });
+                    }
+                });
             }
 
             function escapeHtml(str) {
-                if (!str)
-                    return '';
-                return str.replace(/[&<>]/g, function (m) {
-                    if (m === '&')
-                        return '&amp;';
-                    if (m === '<')
-                        return '&lt;';
-                    if (m === '>')
-                        return '&gt;';
+                if (!str) return '';
+                return str.replace(/[&<>]/g, function(m) {
+                    if (m === '&') return '&amp;';
+                    if (m === '<') return '&lt;';
+                    if (m === '>') return '&gt;';
                     return m;
                 });
             }
