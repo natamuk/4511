@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.*" %>
+<%@taglib uri="/WEB-INF/tlds/current-date.tld" prefix="today" %>
 <%
     String ctx = request.getContextPath();
     Map<String, Object> profile = (Map<String, Object>) request.getAttribute("patientProfile");
@@ -56,7 +57,7 @@
                 <div><p class="font-semibold"><%= realName%></p><p class="text-emerald-600 text-sm">Patient</p></div>
             </div>
             <nav class="space-y-1">
-                <a href="<%= ctx%>/patient/dashboard" class="nav-item flex items-center gap-3 px-5 py-3 rounded-2xl"><i class="fa-solid fa-house w-5"></i><span>Home</span></a>
+                <a href="<%= ctx%>/patient/dashboard" class="nav-item flex items-center gap-3 px-5 py-3 rounded-2xl active"><i class="fa-solid fa-house w-5"></i><span>Home</span></a>
                 <a href="<%= ctx%>/patient/book" class="nav-item flex items-center gap-3 px-5 py-3 rounded-2xl"><i class="fa-solid fa-calendar-check w-5"></i><span>Book Appointment</span></a>
                 <a href="<%= ctx%>/patient/myappointments" class="nav-item flex items-center gap-3 px-5 py-3 rounded-2xl"><i class="fa-solid fa-list w-5"></i><span>My Appointments</span></a>
                 <a href="<%= ctx%>/patient/queue" class="nav-item flex items-center gap-3 px-5 py-3 rounded-2xl"><i class="fa-solid fa-users-line w-5"></i><span>Join Queue</span></a>
@@ -73,7 +74,7 @@
     <div class="flex-1 flex flex-col min-w-0">
         <header class="glass border-b px-8 py-4 flex justify-between items-center z-10">
             <div><h2 class="text-2xl font-semibold">Home</h2><p class="text-sm text-gray-500 mt-1">Clinic overview for today</p></div>
-            <span id="current-date" class="text-sm text-gray-500 font-medium"></span>
+            <today:today/>
         </header>
         <div class="flex-1 overflow-auto p-8">
             <div class="max-w-6xl mx-auto space-y-10">

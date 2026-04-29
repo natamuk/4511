@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.*" %>
+<%@taglib uri="/WEB-INF/tlds/current-date.tld" prefix="today" %>
 <%
     List<Map<String, Object>> notifications = (List<Map<String, Object>>) request.getAttribute("notifications");
     if (notifications == null) {
@@ -156,7 +157,7 @@
                         <a href="<%= ctx%>/patient/book" class="nav-item flex items-center gap-3 px-5 py-3 rounded-2xl"><i class="fa-solid fa-calendar-check w-5"></i><span>Book Appointment</span></a>
                         <a href="<%= ctx%>/patient/myappointments" class="nav-item flex items-center gap-3 px-5 py-3 rounded-2xl"><i class="fa-solid fa-list w-5"></i><span>My Appointments</span></a>
                         <a href="<%= ctx%>/patient/queue" class="nav-item flex items-center gap-3 px-5 py-3 rounded-2xl "><i class="fa-solid fa-users-line w-5"></i><span>Join Queue</span></a>
-                        <a href="<%= ctx%>/patient/notifications" class="nav-item flex items-center gap-3 px-5 py-3 rounded-2xl"><i class="fa-solid fa-bell w-5"></i><span>Notifications</span></a>
+                        <a href="<%= ctx%>/patient/notifications" class="nav-item flex items-center gap-3 px-5 py-3 rounded-2xl active"><i class="fa-solid fa-bell w-5"></i><span>Notifications</span></a>
                         <a href="<%= ctx%>/patient/profile" class="nav-item flex items-center gap-3 px-5 py-3 rounded-2xl"><i class="fa-solid fa-user-gear w-5"></i><span>Profile</span></a>
                     </nav>
                     <div class="mt-auto pt-6 border-t border-white/40">
@@ -173,7 +174,7 @@
                         <h2 class="text-2xl font-semibold">Notifications</h2>
                         <p class="text-sm text-gray-500 mt-1">Alerts</p>
                     </div>
-                    <span id="current-date" class="text-sm text-gray-500 font-medium"></span>
+                    <today:today/>
                 </header>
                 <div class="flex-1 overflow-auto p-8">
                     <div class="max-w-4xl mx-auto glass rounded-3xl p-8">
@@ -216,7 +217,7 @@
                     title: 'Confirm logout?',
                     icon: 'warning',
                     showCancelButton: true,
-                    confirmButtonText: 'Yes, log out',
+                    confirmButtonText: 'Yes',
                     cancelButtonText: 'Cancel'
                 }).then(r => {
                     if (r.isConfirmed)

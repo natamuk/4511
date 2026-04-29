@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.*" %>
+<%@taglib uri="/WEB-INF/tlds/current-date.tld" prefix="today" %>
 <%
     String ctx = request.getContextPath();
     List<Map<String, Object>> queueTickets = (List<Map<String, Object>>) request.getAttribute("queueTickets");
@@ -69,7 +70,7 @@
     <div class="flex-1 flex flex-col min-w-0">
         <header class="glass border-b px-8 py-4 flex justify-between items-center z-10">
             <div><h2 class="text-2xl font-semibold">Join Queue</h2><p class="text-sm text-gray-500 mt-1">Walk-in waiting</p></div>
-            <span id="current-date" class="text-sm text-gray-500 font-medium"></span>
+            <today:today />
         </header>
         <div class="flex-1 overflow-auto p-8">
             <div class="max-w-5xl mx-auto space-y-6">

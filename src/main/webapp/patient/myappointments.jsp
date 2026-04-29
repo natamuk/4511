@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.*" %>
+<%@taglib uri="/WEB-INF/tlds/current-date.tld" prefix="today" %>
 <%
     String ctx = request.getContextPath();
     List<Map<String, Object>> appointments = (List<Map<String, Object>>) request.getAttribute("appointments");
@@ -17,7 +18,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        /* 保持原有样式，略 */
+    
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Noto Sans TC', sans-serif; background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%); }
@@ -47,7 +48,7 @@
 </head>
 <body class="min-h-screen">
 <div class="flex h-screen overflow-hidden relative">
-    <!-- 侧边栏（同原样，略） -->
+
     <div class="w-72 glass shadow-2xl flex flex-col border-r border-white/50 z-40">
         <div class="p-6 bg-gradient-to-r from-blue-700 to-indigo-700 text-white">
             <div class="flex items-center gap-3">
@@ -82,14 +83,14 @@
         </div>
     </div>
 
-    <!-- 右侧内容 -->
+
     <div class="flex-1 flex flex-col min-w-0">
         <header class="glass border-b px-8 py-4 flex justify-between items-center z-10">
             <div>
                 <h2 class="text-2xl font-semibold">My Appointments</h2>
                 <p class="text-sm text-gray-500 mt-1">Manage bookings</p>
             </div>
-            <span id="current-date" class="text-sm text-gray-500 font-medium"></span>
+            <today:today/>
         </header>
         <div class="flex-1 overflow-auto p-8">
             <div class="max-w-5xl mx-auto space-y-6">
@@ -164,7 +165,7 @@
     </div>
 </div>
 
-<!-- 改时间模态框 -->
+
 <div id="rescheduleModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
     <div class="bg-white rounded-2xl p-6 w-full max-w-md mx-4">
         <h3 class="text-xl font-bold mb-4">Reschedule Appointment</h3>
@@ -195,7 +196,7 @@
         weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
     });
 
-    // 改时间模态框元素
+
     const modal = document.getElementById('rescheduleModal');
     const modalClinicName = document.getElementById('modalClinicName');
     const modalOldDateTime = document.getElementById('modalOldDateTime');
@@ -204,7 +205,7 @@
     let currentRegId = null;
     let currentClinicId = null;
 
-    // 打开模态框
+
     document.querySelectorAll('.reschedule-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.preventDefault();
@@ -226,7 +227,6 @@
     }
     document.getElementById('closeModalBtn').addEventListener('click', closeModal);
 
-    // 日期变化加载时段
     newDateInput.addEventListener('change', async () => {
         const selectedDate = newDateInput.value;
         if (!selectedDate || !currentClinicId) return;
@@ -251,7 +251,7 @@
         }
     });
 
-    // 提交改时间
+
     document.getElementById('confirmRescheduleBtn').addEventListener('click', async () => {
         const newDate = newDateInput.value;
         const newSlot = newSlotSelect.value;
@@ -279,7 +279,7 @@
         }
     });
 
-    // 取消预约的 AJAX 处理（不变）
+
     async function cancelAppointment(regId) {
         const response = await fetch(contextPath + '/patient/cancel-booking', {
             method: 'POST',
