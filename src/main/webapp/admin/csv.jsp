@@ -1,7 +1,7 @@
 <%-- csv.jsp --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="com.mycompany.system.model.LoginUser" %>
-
+<%@taglib uri="/WEB-INF/tlds/current-date" prefix="today" %>
 <%
     LoginUser loginUser = (LoginUser) session.getAttribute("loginUser");
     if (loginUser == null || !"admin".equals(session.getAttribute("role"))) {
@@ -124,7 +124,7 @@
         <div class="main">
             <header class="header">
                 <h2 class="text-2xl font-semibold">Data Import & Export</h2>
-                <span id="current-date" class="text-sm text-gray-500"></span>
+                <today:today/>
             </header>
 
             <div class="content">

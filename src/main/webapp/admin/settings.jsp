@@ -3,6 +3,8 @@
 <%@ page import="com.mycompany.system.model.LoginUser" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<%@taglib uri="/WEB-INF/tlds/current-date" prefix="today" %>
+
 <%
     LoginUser loginUser = (LoginUser) session.getAttribute("loginUser");
     if (loginUser == null || !"admin".equals(session.getAttribute("role"))) {
@@ -191,7 +193,7 @@
                 
                 
             <div class="main">
-                <header class="header"><h2 class="text-2xl font-semibold">System Settings</h2><span id="current-date" class="text-sm text-gray-500"></span></header>
+                <header class="header"><h2 class="text-2xl font-semibold">System Settings</h2><today:today/></header>
                 <div class="content">
                     <div class="card">
                         <h3 class="text-xl font-bold mb-4">Global Policies</h3>

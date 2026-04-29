@@ -11,6 +11,8 @@
 <%@ taglib uri="/WEB-INF/tlds/patient.tld" prefix="pat" %>
 <%@ taglib uri="/WEB-INF/tlds/admin.tld" prefix="adm" %>
 <%@ page isELIgnored="false" %>
+<%@taglib uri="/WEB-INF/tlds/current-date" prefix="today" %>
+
 <%
     LoginUser loginUser = (LoginUser) session.getAttribute("loginUser");
     if (loginUser == null || !"admin".equals(session.getAttribute("role"))) {
@@ -104,7 +106,7 @@
     </aside>
         
     <div class="flex-1 flex flex-col min-w-0">
-        <header class="glass border-b px-8 py-4 flex justify-between items-center"><h2 class="text-2xl font-semibold">User Management</h2><div class="flex items-center gap-3"><span id="current-date" class="text-sm text-gray-500"></span></div></header>
+        <header class="glass border-b px-8 py-4 flex justify-between items-center"><h2 class="text-2xl font-semibold">User Management</h2><div class="flex items-center gap-3"><today:today/></div></header>
         <div class="flex-1 overflow-auto p-4 md:p-8">
             <div class="space-y-8">
                 <!-- ADMIN -->

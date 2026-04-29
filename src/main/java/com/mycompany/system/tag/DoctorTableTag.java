@@ -34,7 +34,7 @@ public class DoctorTableTag extends SimpleTagSupport {
                 out.write("<td>" + d.getEmail() + "</td>");
                 out.write("<td>" + d.getTitle() + "</td>");
                 out.write("<td>");
-                out.write("<a href='" + contextPath + "/admin/contents/edit.jsp?role=doctor&id=" + d.getId()
+                out.write("<a href='" + contextPath + "/admin/edit.jsp?role=doctor&id=" + d.getId()
                         + "' class='px-3 py-1 bg-blue-600 text-white rounded mr-2'>Edit</a>");
                 out.write("<a href='" + contextPath + "/AbminDeleteServlet?role=doctor&id=" + d.getId()
                         + "' class='px-3 py-1 bg-red-600 text-white rounded' "

@@ -10,6 +10,8 @@
 <%@ page import="com.mycompany.system.dao.AdminDashboardDao" %>
 <%@ page import="java.util.*" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@taglib uri="/WEB-INF/tlds/current-date" prefix="today" %>
+
 <%
     LoginUser loginUser = (LoginUser) session.getAttribute("loginUser");
     if (loginUser == null || !"admin".equals(session.getAttribute("role"))) {
@@ -68,7 +70,7 @@
 
     <div class="flex-1 flex flex-col min-w-0">
         <header class="glass border-b px-8 py-4 flex justify-between items-center">
-            <h2 class="text-2xl font-semibold">Services & Quota</h2><div class="flex items-center gap-3"><span id="current-date" class="text-sm text-gray-500"></span></div>
+            <h2 class="text-2xl font-semibold">Services & Quota</h2><div class="flex items-center gap-3"><today:today/></div>
         </header>
         <div class="flex-1 overflow-auto p-4 md:p-8">
             <!-- 原 quota-contents.jsp 内容开始 -->
@@ -117,6 +119,5 @@
         </div>
     </div>
 </div>
-<script>document.getElementById('current-date').innerText = new Date().toLocaleDateString('zh-CN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });</script>
 </body>
 </html>

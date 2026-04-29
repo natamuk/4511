@@ -33,7 +33,7 @@ public class PatientTableTag extends SimpleTagSupport {
                 out.write("<td>" + p.getPhone() + "</td>");
                 out.write("<td>" + p.getEmail() + "</td>");
                 out.write("<td>" + p.getAddress() + "</td>");
-                out.write("<td><a href='" + contextPath + "/admin/contents/edit.jsp?role=patient&id=" + p.getId()
+                out.write("<td><a href='" + contextPath + "/admin/edit.jsp?role=patient&id=" + p.getId()
                         + "' class='px-3 py-1 bg-green-600 text-white rounded'>Edit</a>");
                 out.write("<a href='" + contextPath + "/AbminDeleteServlet?role=patient&id=" + p.getId()
                         + "' class='px-3 py-1 bg-red-600 text-white rounded' "
