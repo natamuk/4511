@@ -6,7 +6,6 @@ import com.mycompany.system.util.DBUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
-
 import java.io.IOException;
 import java.sql.Connection;
 import java.util.HashMap;
@@ -27,11 +26,17 @@ public class DoctorActionServlet extends HttpServlet {
         HttpSession session = request.getSession(false);
         LoginUser user = (session == null) ? null : (LoginUser) session.getAttribute("loginUser");
         if (user == null || !"doctor".equals(session.getAttribute("role"))) {
-            respondJson(response, false, "Unauthorized", HttpServletResponse.SC_OK);  // 使用 200，前端通过 success 判断
+            respondJson(response, false, "Unauthorized", HttpServletResponse.SC_OK);
             return;
         }
-        if (action == null || id == null) {
-            respondJson(response, false, "Missing parameters", HttpServletResponse.SC_OK);
+
+        // 参数校验
+        if (action == null || action.trim().isEmpty()) {
+            respondJson(response, false, "Missing action parameter", HttpServletResponse.SC_OK);
+            return;
+        }
+        if (!"callnext".equalsIgnoreCase(action) && id == null) {
+            respondJson(response, false, "Missing id parameter", HttpServletResponse.SC_OK);
             return;
         }
 
@@ -95,12 +100,10 @@ public class DoctorActionServlet extends HttpServlet {
             success = false;
         }
 
-        // 统一返回 HTTP 200，业务成功/失败由 JSON 中的 success 标志表示
         respondJson(response, success, message, HttpServletResponse.SC_OK);
     }
 
     private void respondJson(HttpServletResponse response, boolean success, String message, int statusCode) throws IOException {
-        // 关键：清除可能由错误页面或之前输出导致的内容
         response.reset();
         response.setContentType("application/json;charset=UTF-8");
         response.setStatus(statusCode);
@@ -110,13 +113,12 @@ public class DoctorActionServlet extends HttpServlet {
             result.put("message", message);
         }
         response.getWriter().write(gson.toJson(result));
-        response.getWriter().flush();
     }
 
     private Long parseLong(String v) {
         try {
             return v == null ? null : Long.parseLong(v);
-        } catch (Exception e) {
+        } catch (NumberFormatException e) {
             return null;
         }
     }
