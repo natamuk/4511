@@ -88,19 +88,13 @@
         <div class="p-6 bg-gradient-to-r from-sky-700 to-blue-700">
             <div class="flex items-center gap-3">
                 <i class="fa-solid fa-user-doctor text-4xl text-white"></i>
-                <div>
-                    <h1 class="text-2xl font-bold text-white">CCHC</h1>
-                    <p class="text-sm text-white/90">Doctor Dashboard</p>
-                </div>
+                <div><h1 class="text-2xl font-bold text-white">CCHC</h1><p class="text-sm text-white/90">Doctor Dashboard</p></div>
             </div>
         </div>
         <div class="p-6 flex-1 flex flex-col overflow-y-auto">
             <div class="flex items-center gap-4 p-4 glass rounded-3xl mb-8">
                 <img src="<%= avatar %>" class="w-14 h-14 rounded-2xl ring-4 ring-white object-cover" alt="avatar">
-                <div>
-                    <p class="font-semibold"><%= realName %></p>
-                    <p class="text-sky-600 text-sm"><%= clinicName %></p>
-                </div>
+                <div><p class="font-semibold"><%= realName %></p><p class="text-sky-600 text-sm"><%= clinicName %></p><p class="text-xs text-gray-500 mt-1"><%= dept %></p></div>
             </div>
             <nav class="flex flex-col gap-1">
                 <a href="<%= ctx %>/doctor/dashboard" class="nav-item flex items-center gap-3 px-5 py-3 rounded-2xl"><i class="fa-solid fa-chart-pie w-5"></i><span>Dashboard</span></a>
@@ -114,16 +108,20 @@
                 <a href="<%= ctx %>/doctor/profile" class="nav-item flex items-center gap-3 px-5 py-3 rounded-2xl"><i class="fa-solid fa-user-gear w-5"></i><span>Profile</span></a>
             </nav>
             <div class="mt-auto pt-6 border-t border-white/40">
-                <a href="<%= ctx %>/logout" class="w-full flex items-center justify-center gap-3 px-5 py-3 rounded-2xl text-gray-600 hover:bg-red-50 hover:text-red-600 transition">
-                    <i class="fa-solid fa-right-from-bracket"></i><span>Logout</span>
-                </a>
+                <a href="<%= ctx %>/logout" class="w-full flex items-center justify-center gap-3 px-5 py-3 rounded-2xl text-gray-600 hover:bg-red-50 hover:text-red-600 transition"><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></a>
             </div>
         </div>
     </div>
     <div class="flex-1 flex flex-col min-w-0 ml-80">
+        <header class="glass border-b px-8 py-4 flex justify-between items-center z-10">
+            <div>
+                <h2 class="text-2xl font-semibold">Appointment Management</h2>
+                <p class="text-sm text-gray-500 mt-1">View and manage patient bookings</p>
+            </div>
+            <span id="current-date" class="text-sm text-gray-500 font-medium"></span>
+        </header>
         <div class="flex-1 overflow-auto p-4 md:p-8">
             <div class="max-w-6xl mx-auto">
-                <h2 class="text-2xl font-bold mb-6">Appointment Management</h2>
                 <div class="card">
                     <div class="overflow-x-auto">
                         <table class="min-w-full">
@@ -155,19 +153,17 @@
                                     <td>
                                         <% if (statusCode == 1) { %>
                                         <form action="<%= ctx %>/doctor/action" method="post" class="inline-block">
-                                            <input type="hidden" name="action" value="approve"><input type="hidden" name="id" value="<%= id %>">
+                                            <input type="hidden" name="action" value="approve">
+                                            <input type="hidden" name="id" value="<%= id %>">
                                             <button type="submit" class="btn">Approve</button>
                                         </form>
-                                        <form action="<%= ctx %>/doctor/action" method="post" class="inline-block ml-2">
-                                            <input type="hidden" name="action" value="reject"><input type="hidden" name="id" value="<%= id %>">
-                                            <button type="submit" class="btn-red">Reject</button>
-                                        </form>
+                                        <button type="button" class="btn-red reject-btn" data-id="<%= id %>">Reject</button>
                                         <% } else { %>Processed<% } %>
                                     </td>
                                 </tr>
                                 <% } %>
                                 <% if (appointments.isEmpty()) { %>
-                                <tr><td colspan="6" class="text-center py-4">No appointments found.</td></tr>
+                                <tr><td colspan="6" class="text-center py-4">No appointments found.您</td></tr>
                                 <% } %>
                             </tbody>
                         </table>
@@ -177,5 +173,56 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-US', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+
+    document.querySelectorAll('.reject-btn').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const appointmentId = this.dataset.id;
+            const { value: reason } = await Swal.fire({
+                title: 'Cancel Appointment',
+                input: 'textarea',
+                inputLabel: 'Please provide reason for cancellation:',
+                inputPlaceholder: 'Enter cancellation reason here...',
+                inputAttributes: { 'aria-label': 'Cancellation reason' },
+                showCancelButton: true,
+                confirmButtonText: 'Confirm Cancel',
+                cancelButtonText: 'Back',
+                inputValidator: (value) => {
+                    if (!value || value.trim() === '') {
+                        return 'Reason is required!';
+                    }
+                }
+            });
+            if (!reason) return;
+
+            const formData = new URLSearchParams();
+            formData.append('action', 'reject');
+            formData.append('id', appointmentId);
+            formData.append('reason', reason);
+            try {
+                const response = await fetch('<%= ctx %>/doctor/action', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                });
+                const data = await response.json();
+                if (data.success) {
+                    Swal.fire('Cancelled', data.message, 'success').then(() => location.reload());
+                } else {
+                    Swal.fire('Error', data.message, 'error');
+                }
+            } catch (err) {
+                Swal.fire('Network Error', err.message, 'error');
+            }
+        });
+    });
+</script>
 </body>
 </html>
