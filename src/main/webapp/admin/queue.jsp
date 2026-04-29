@@ -4,6 +4,7 @@
 <%@ page import="com.mycompany.system.dao.AdminDashboardDao" %>
 <%@ page import="java.util.*" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+
 <%
     LoginUser loginUser = (LoginUser) session.getAttribute("loginUser");
     if (loginUser == null || !"admin".equals(session.getAttribute("role"))) {
@@ -14,6 +15,7 @@
     List<Map<String, Object>> queue = dao.getQueueList();
     request.setAttribute("queue", queue);
 %>
+
 <!DOCTYPE html>
 <html lang="zh">
 <head>
@@ -23,161 +25,133 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<style>
-            @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap');
-            * {
-                box-sizing: border-box;
-            }
-            html {
-                scroll-behavior: smooth;
-            }
-            body {
-                font-family: 'Noto Sans TC', sans-serif;
-                background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%);
-            }
-            .glass {
-                background: rgba(255,255,255,0.95);
-                border:1px solid rgba(255,255,255,0.6);
-                box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);
-                backdrop-filter: blur(4px);
-                -webkit-backdrop-filter: blur(4px);
-            }
-            .nav-item {
-                transition: background-color .2s, transform .2s, color .2s;
-                cursor:pointer;
-            }
-            .nav-item:hover {
-                transform: translateX(8px);
-                background: rgba(99,102,241,0.1);
-            }
-            .nav-item.active {
-                background: rgba(99,102,241,0.14);
-                color:#4f46e5;
-                font-weight:700;
-            }
-            .card:hover {
-                transform: translateY(-4px);
-                box-shadow:0 15px 30px rgba(0,0,0,0.08);
-            }
-            .badge {
-                display:inline-flex;
-                align-items:center;
-                gap:.35rem;
-                padding:.35rem .7rem;
-                border-radius:999px;
-                font-size:.75rem;
-                font-weight:700;
-                white-space:nowrap;
-            }
-            .badge-success {
-                background:#dcfce7;
-                color:#166534;
-            }
-            .badge-warning {
-                background:#fef3c7;
-                color:#92400e;
-            }
-            .badge-danger {
-                background:#fee2e2;
-                color:#b91c1c;
-            }
-            .badge-info {
-                background:#dbeafe;
-                color:#1d4ed8;
-            }
-            #main-content {
-                opacity:0;
-                transform: translate3d(0,10px,0);
-                will-change: opacity, transform;
-                contain:layout paint;
-            }
-            @media (max-width:768px) {
-                #sidebar {
-                    transform: translateX(-100%);
-                    transition: transform .3s;
-                }
-                #sidebar.open {
-                    transform: translateX(0);
-                }
-            }
-            .switch {
-                position: relative;
-                display: inline-block;
-                width: 50px;
-                height: 26px;
-            }
-            .switch input {
-                opacity: 0;
-                width: 0;
-                height: 0;
-            }
-            .slider {
-                position: absolute;
-                cursor: pointer;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background-color: #ccc;
-                transition: .4s;
-                border-radius: 34px;
-            }
-            .slider:before {
-                position: absolute;
-                content: "";
-                height: 18px;
-                width: 18px;
-                left: 4px;
-                bottom: 4px;
-                background-color: white;
-                transition: .4s;
-                border-radius: 50%;
-            }
-            input:checked + .slider {
-                background-color: #2196F3;
-            }
-            input:checked + .slider:before {
-                transform: translateX(24px);
-            }
-        </style>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap');
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%);
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .app {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .sidebar {
+            width: 320px;
+            background: white;
+            border-right: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+        }
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .header {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem;
+        }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.25rem;
+            border-radius: 1rem;
+            color: #374151;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .nav-item:hover {
+            background: #f1f5f9;
+            transform: translateX(8px);
+        }
+        .nav-item.active {
+            background: #e0e7ff;
+            color: #4f46e5;
+            font-weight: 700;
+        }
+    </style>
 </head>
 <body>
-<div class="app">
-    <aside class="sidebar"> 
-        <div class="sidebar-header"><div class="flex items-center gap-2"><i class="fa-solid fa-user-shield text-2xl"></i><div><h1 class="text-xl font-bold">CCHC</h1><p class="text-sm opacity-90">Admin Console</p></div></div></div>
-        <div class="sidebar-nav">
-            <a href="${pageContext.request.contextPath}/admin/dashboard.jsp" class="nav-item"> Dashboard</a>
-            <a href="${pageContext.request.contextPath}/admin/users.jsp" class="nav-item"> User Management</a>
-            <a href="${pageContext.request.contextPath}/admin/appointments.jsp" class="nav-item"> Appointments</a>
-            <a href="${pageContext.request.contextPath}/admin/queue.jsp" class="nav-item active"> Queue</a>
-            <a href="${pageContext.request.contextPath}/admin/quota.jsp" class="nav-item"> Services & Quota</a>
-            <a href="${pageContext.request.contextPath}/admin/reports.jsp" class="nav-item"> Reports</a>
-            <a href="${pageContext.request.contextPath}/admin/logs.jsp" class="nav-item"> Audit Logs</a>
-            <a href="${pageContext.request.contextPath}/admin/notifications.jsp" class="nav-item"> Notifications</a>
-            <a href="${pageContext.request.contextPath}/admin/settings.jsp" class="nav-item"> Settings</a>
-            <a href="${pageContext.request.contextPath}/admin/csv.jsp" class="nav-item"> CSV Import/Export</a>
-            <a href="${pageContext.request.contextPath}/admin/profile.jsp" class="nav-item"> Profile</a>
-        </div>
-        <div class="logout-btn"><a href="${pageContext.request.contextPath}/logout" class="nav-item justify-center text-red-600"> Logout</a></div>
-    </aside>
-    <div class="main">
-        <header class="header"><h2 class="text-2xl font-semibold">Queue Management</h2><span id="current-date" class="text-sm text-gray-500"></span></header>
-        <div class="content">
-            <div class="max-w-4xl mx-auto">
-                <h2 class="text-2xl font-bold mb-4">Current Queue</h2>
-                <c:if test="${empty queue}"><div class="text-center py-12 text-gray-500">No active queue entries.</div></c:if>
-                <c:forEach var="q" items="${queue}">
-                    <div class="queue-item">
-                        <div class="flex justify-between items-start">
-                            <div><p class="font-semibold text-lg">${q.clinic}</p><p class="text-sm text-gray-600">Ticket: <span class="font-mono font-bold text-indigo-600">${q.ticketNo}</span></p><p class="text-sm">Patient: ${q.patient}</p></div>
-                            <span class="queue-status status-${q.status}">${q.status}</span>
+    <div class="app">
+
+        <!-- SIDEBAR -->
+        <aside class="w-80 glass bg-white shadow-2xl flex flex-col border-r border-white/50 fixed md:relative h-full z-40">
+                <div class="p-6 bg-gradient-to-r from-indigo-700 to-violet-700 text-white"><div class="flex items-center gap-3"><i class="fa-solid fa-user-shield text-4xl"></i><div><h1 class="text-2xl font-bold">CCHC</h1><p class="text-sm opacity-90">Admin Console</p></div></div></div>
+                <div class="p-6 flex-1 flex flex-col overflow-y-auto">
+                    <div class="flex items-center gap-4 p-4 glass rounded-3xl mb-8"><img src="https://picsum.photos/200/200?random=99" class="w-14 h-14 rounded-2xl ring-4 ring-white object-cover"><div><p class="font-semibold"><%= loginUser.getRealName()%></p><p class="text-indigo-600 text-sm">Full Access</p></div></div>
+                    <nav class="space-y-1">
+                        <a href="${pageContext.request.contextPath}/admin/dashboard.jsp" class="nav-item"><i class="fa-solid fa-chart-pie w-5"></i><span>Dashboard</span></a>
+                        <a href="${pageContext.request.contextPath}/admin/users.jsp" class="nav-item"><i class="fa-solid fa-users w-5"></i><span>User Management</span></a>
+                        <a href="${pageContext.request.contextPath}/admin/appointments.jsp" class="nav-item"><i class="fa-solid fa-calendar-check w-5"></i><span>Appointments</span></a>
+                        <a href="${pageContext.request.contextPath}/admin/queue.jsp" class="nav-item active"><i class="fa-solid fa-list-ol w-5"></i><span>Queue</span></a>
+                        <a href="${pageContext.request.contextPath}/admin/quota.jsp" class="nav-item"><i class="fa-solid fa-server w-5"></i><span>Services & Quota</span></a>
+                        <a href="${pageContext.request.contextPath}/admin/reports.jsp" class="nav-item"><i class="fa-solid fa-chart-bar w-5"></i><span>Reports</span></a>
+                        <a href="${pageContext.request.contextPath}/admin/logs.jsp" class="nav-item"><i class="fa-solid fa-clipboard-list w-5"></i><span>Audit Logs</span></a>
+                        <a href="${pageContext.request.contextPath}/admin/notifications.jsp" class="nav-item"><i class="fa-solid fa-bell w-5"></i><span>Notifications</span></a>
+                        <a href="${pageContext.request.contextPath}/admin/settings.jsp" class="nav-item"><i class="fa-solid fa-sliders w-5"></i><span>Settings</span></a>
+                        <a href="${pageContext.request.contextPath}/admin/csv.jsp" class="nav-item"><i class="fa-solid fa-file-csv w-5"></i><span>CSV Import/Export</span></a>
+                        <a href="${pageContext.request.contextPath}/admin/profile.jsp" class="nav-item"><i class="fa-solid fa-user-gear w-5"></i><span>Profile</span></a>
+                    </nav>
+                    <div class="mt-auto pt-6 border-t border-white/40"><a href="${pageContext.request.contextPath}/logout" class="w-full flex items-center justify-center gap-3 px-5 py-3 rounded-2xl text-gray-600 hover:bg-red-50 hover:text-red-600 transition"><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></a></div>
+                </div>
+            </aside>
+
+        <!-- MAIN CONTENT -->
+        <div class="main">
+            <header class="header">
+                <h2 class="text-2xl font-semibold">Queue Management</h2>
+                <span id="current-date" class="text-sm text-gray-500"></span>
+            </header>
+
+            <div class="content">
+                <div class="max-w-4xl mx-auto">
+                    <h2 class="text-2xl font-bold mb-6">Current Queue</h2>
+                    
+                    <c:if test="${empty queue}">
+                        <div class="text-center py-12 text-gray-500">No active queue entries.</div>
+                    </c:if>
+                    
+                    <c:forEach var="q" items="${queue}">
+                        <div class="bg-white p-6 rounded-2xl shadow-sm border mb-4">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="font-semibold text-lg">${q.clinic}</p>
+                                    <p class="text-sm text-gray-600">
+                                        Ticket: <span class="font-mono font-bold text-indigo-600">${q.ticketNo}</span>
+                                    </p>
+                                    <p class="text-sm">Patient: ${q.patient}</p>
+                                </div>
+                                <span class="badge badge-info">${q.status}</span>
+                            </div>
                         </div>
-                    </div>
-                </c:forEach>
+                    </c:forEach>
+                </div>
             </div>
         </div>
     </div>
-</div>
-<script>document.getElementById('current-date').innerText = new Date().toLocaleDateString('zh-CN');</script>
+
+    <script>
+        document.getElementById('current-date').innerText = new Date().toLocaleDateString('zh-CN', {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+        });
+    </script>
 </body>
 </html>

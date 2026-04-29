@@ -97,14 +97,14 @@
                 <div class="space-y-1">
                     <a href="${pageContext.request.contextPath}/admin/dashboard.jsp" class="nav-item"><i class="fa-solid fa-chart-pie"></i> Dashboard</a>
                     <a href="${pageContext.request.contextPath}/admin/users.jsp" class="nav-item"><i class="fa-solid fa-users"></i> User Management</a>
-                    <a href="${pageContext.request.contextPath}/admin/appointments.jsp" class="nav-item active"><i class="fa-solid fa-calendar-check"></i> Appointments</a>
+                    <a href="${pageContext.request.contextPath}/admin/appointments.jsp" class="nav-item"><i class="fa-solid fa-calendar-check"></i> Appointments</a>
                     <a href="${pageContext.request.contextPath}/admin/queue.jsp" class="nav-item"><i class="fa-solid fa-list-ol"></i> Queue</a>
                     <a href="${pageContext.request.contextPath}/admin/quota.jsp" class="nav-item"><i class="fa-solid fa-server"></i> Services & Quota</a>
                     <a href="${pageContext.request.contextPath}/admin/reports.jsp" class="nav-item"><i class="fa-solid fa-chart-bar"></i> Reports</a>
                     <a href="${pageContext.request.contextPath}/admin/logs.jsp" class="nav-item"><i class="fa-solid fa-clipboard-list"></i> Audit Logs</a>
                     <a href="${pageContext.request.contextPath}/admin/notifications.jsp" class="nav-item"><i class="fa-solid fa-bell"></i> Notifications</a>
                     <a href="${pageContext.request.contextPath}/admin/settings.jsp" class="nav-item"><i class="fa-solid fa-sliders"></i> Settings</a>
-                    <a href="${pageContext.request.contextPath}/admin/csv.jsp" class="nav-item"><i class="fa-solid fa-file-csv"></i> CSV Import/Export</a>
+                    <a href="${pageContext.request.contextPath}/admin/csv.jsp" class="nav-item active"><i class="fa-solid fa-file-csv"></i> CSV Import/Export</a>
                     <a href="${pageContext.request.contextPath}/admin/profile.jsp" class="nav-item"><i class="fa-solid fa-user-gear"></i> Profile</a>
                 </div>
                 <div class="logout-btn"><a href="${pageContext.request.contextPath}/logout" class="nav-item justify-center text-red-600 hover:bg-red-50"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></div>
