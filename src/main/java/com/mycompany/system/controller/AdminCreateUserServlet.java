@@ -60,7 +60,7 @@ public class AdminCreateUserServlet extends HttpServlet {
                 } else {
                     doctor.setDepartmentId(1L);
                 }
-                doctor.setAvatar("default.png");
+                doctor.setAvatar(null);
                 doctor.setStatus(1);
                 success = DoctorDB.insert(doctor);
 
@@ -72,7 +72,7 @@ public class AdminCreateUserServlet extends HttpServlet {
                 patient.setPhone(request.getParameter("phone"));
                 patient.setEmail(request.getParameter("email"));
                 patient.setAddress(request.getParameter("address"));
-                patient.setAvatar("default.png");
+                patient.setAvatar(null);
                 patient.setBalance(BigDecimal.ZERO);
                 patient.setStatus(1);
                 success = PatientDB.insert(patient);
@@ -81,7 +81,7 @@ public class AdminCreateUserServlet extends HttpServlet {
             
 
             if (success) {
-                response.sendRedirect(request.getContextPath() + "/admin/dashboard");
+                response.sendRedirect(request.getContextPath() + "/admin/users.jsp");
             } else {
                 request.setAttribute("error", "Create user failed");
                 request.getRequestDispatcher("/admin/add-user.jsp").forward(request, response);
@@ -90,7 +90,7 @@ public class AdminCreateUserServlet extends HttpServlet {
         } catch (Exception e) {
             e.printStackTrace();
             request.setAttribute("error", "Server error: " + e.getMessage());
-            request.getRequestDispatcher("/admin/contents/add-user.jsp").forward(request, response);
+            request.getRequestDispatcher("/admin/add-user.jsp").forward(request, response);
         }
     }
 }
