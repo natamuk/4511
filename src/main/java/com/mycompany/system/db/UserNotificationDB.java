@@ -10,9 +10,8 @@ public class UserNotificationDB {
 
     public static UserNotificationBean getById(Long id) {
         String sql = "SELECT * FROM user_notification WHERE id = ?";
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            
+        try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
             ps.setLong(1, id);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -28,10 +27,8 @@ public class UserNotificationDB {
     public static List<UserNotificationBean> getAll() {
         List<UserNotificationBean> list = new ArrayList<>();
         String sql = "SELECT * FROM user_notification ORDER BY create_time DESC";
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            
+        try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+
             while (rs.next()) {
                 list.add(mapRow(rs));
             }
@@ -44,9 +41,8 @@ public class UserNotificationDB {
     public static List<UserNotificationBean> getByUser(Integer userType, Long userId) {
         List<UserNotificationBean> list = new ArrayList<>();
         String sql = "SELECT * FROM user_notification WHERE user_type = ? AND user_id = ? ORDER BY create_time DESC";
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            
+        try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
             ps.setInt(1, userType);
             ps.setLong(2, userId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -62,11 +58,10 @@ public class UserNotificationDB {
 
     public static boolean insert(UserNotificationBean notification) {
         String sql = "INSERT INTO user_notification "
-                   + "(user_id, user_type, title, message, type, is_read, create_time) "
-                   + "VALUES (?, ?, ?, ?, ?, ?, NOW())";
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            
+                + "(user_id, user_type, title, message, type, is_read, create_time) "
+                + "VALUES (?, ?, ?, ?, ?, ?, NOW())";
+        try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
             ps.setLong(1, notification.getUserId());
             ps.setInt(2, notification.getUserType());
             ps.setString(3, notification.getTitle());
@@ -91,9 +86,8 @@ public class UserNotificationDB {
 
     public static boolean markAsRead(Long id) {
         String sql = "UPDATE user_notification SET is_read = 1 WHERE id = ?";
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            
+        try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
             ps.setLong(1, id);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -104,9 +98,8 @@ public class UserNotificationDB {
 
     public static boolean deleteById(Long id) {
         String sql = "DELETE FROM user_notification WHERE id = ?";
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            
+        try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
             ps.setLong(1, id);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -118,13 +111,12 @@ public class UserNotificationDB {
     public static List<UserNotificationBean> search(String keyword) {
         List<UserNotificationBean> list = new ArrayList<>();
         String sql = "SELECT * FROM user_notification WHERE title LIKE ? OR message LIKE ? ORDER BY create_time DESC";
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            
+        try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
             String like = "%" + keyword + "%";
             ps.setString(1, like);
             ps.setString(2, like);
-            
+
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     list.add(mapRow(rs));
@@ -145,10 +137,12 @@ public class UserNotificationDB {
         n.setMessage(rs.getString("message"));
         n.setType(rs.getString("type"));
         n.setIsRead(rs.getBoolean("is_read"));
-        
+
         Timestamp ct = rs.getTimestamp("create_time");
-        if (ct != null) n.setCreateTime(ct.toLocalDateTime());
-        
+        if (ct != null) {
+            n.setCreateTime(ct.toLocalDateTime());
+        }
+
         return n;
     }
 }

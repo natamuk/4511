@@ -11,9 +11,8 @@ public class RegistrationDB {
 
     public static RegistrationBean getById(Long id) {
         String sql = "SELECT * FROM registration WHERE id = ?";
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            
+        try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
             ps.setLong(1, id);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -29,10 +28,8 @@ public class RegistrationDB {
     public static List<RegistrationBean> getAll() {
         List<RegistrationBean> list = new ArrayList<>();
         String sql = "SELECT * FROM registration ORDER BY reg_date DESC, queue_no ASC";
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            
+        try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+
             while (rs.next()) {
                 list.add(mapRow(rs));
             }
@@ -44,11 +41,10 @@ public class RegistrationDB {
 
     public static boolean insert(RegistrationBean reg) {
         String sql = "INSERT INTO registration "
-                   + "(reg_no, patient_id, doctor_id, department_id, schedule_id, reg_date, queue_no, fee, status, create_time, update_time) "
-                   + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            
+                + "(reg_no, patient_id, doctor_id, department_id, schedule_id, reg_date, queue_no, fee, status, create_time, update_time) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
+        try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
             ps.setString(1, reg.getRegNo());
             ps.setLong(2, reg.getPatientId());
             ps.setLong(3, reg.getDoctorId());
@@ -76,9 +72,8 @@ public class RegistrationDB {
 
     public static boolean update(RegistrationBean reg) {
         String sql = "UPDATE registration SET status=?, cancel_time=?, call_time=?, update_time=NOW() WHERE id=?";
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            
+        try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
             ps.setInt(1, reg.getStatus() != null ? reg.getStatus() : 1);
             ps.setTimestamp(2, reg.getCancelTime() != null ? Timestamp.valueOf(reg.getCancelTime()) : null);
             ps.setTimestamp(3, reg.getCallTime() != null ? Timestamp.valueOf(reg.getCallTime()) : null);
@@ -93,9 +88,8 @@ public class RegistrationDB {
 
     public static boolean deleteById(Long id) {
         String sql = "DELETE FROM registration WHERE id = ?";
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            
+        try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
             ps.setLong(1, id);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -107,12 +101,11 @@ public class RegistrationDB {
     public static List<RegistrationBean> search(String keyword) {
         List<RegistrationBean> list = new ArrayList<>();
         String sql = "SELECT * FROM registration WHERE reg_no LIKE ? ORDER BY reg_date DESC";
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            
+        try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
             String like = "%" + keyword + "%";
             ps.setString(1, like);
-            
+
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     list.add(mapRow(rs));
@@ -132,26 +125,62 @@ public class RegistrationDB {
         r.setDoctorId(rs.getLong("doctor_id"));
         r.setDepartmentId(rs.getLong("department_id"));
         r.setScheduleId(rs.getLong("schedule_id"));
-        
+
         Date regDate = rs.getDate("reg_date");
-        if (regDate != null) r.setRegDate(regDate.toLocalDate());
-        
+        if (regDate != null) {
+            r.setRegDate(regDate.toLocalDate());
+        }
+
         r.setQueueNo(rs.getInt("queue_no"));
         r.setFee(rs.getBigDecimal("fee"));
         r.setStatus(rs.getInt("status"));
-        
+
         Timestamp cancelTs = rs.getTimestamp("cancel_time");
-        if (cancelTs != null) r.setCancelTime(cancelTs.toLocalDateTime());
-        
+        if (cancelTs != null) {
+            r.setCancelTime(cancelTs.toLocalDateTime());
+        }
+
         Timestamp callTs = rs.getTimestamp("call_time");
-        if (callTs != null) r.setCallTime(callTs.toLocalDateTime());
-        
+        if (callTs != null) {
+            r.setCallTime(callTs.toLocalDateTime());
+        }
+
         Timestamp ct = rs.getTimestamp("create_time");
-        if (ct != null) r.setCreateTime(ct.toLocalDateTime());
-        
+        if (ct != null) {
+            r.setCreateTime(ct.toLocalDateTime());
+        }
+
         Timestamp ut = rs.getTimestamp("update_time");
-        if (ut != null) r.setUpdateTime(ut.toLocalDateTime());
-        
+        if (ut != null) {
+            r.setUpdateTime(ut.toLocalDateTime());
+        }
+
         return r;
+    }
+
+    public static boolean cancelBooking(Long registrationId, Long scheduleId) {
+        try (Connection conn = DBUtil.getConnection()) {
+            conn.setAutoCommit(false);
+
+            // Update registration status to cancelled
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "UPDATE registration SET status = 2, cancel_time = NOW(), update_time = NOW() WHERE id = ?")) {
+                ps.setLong(1, registrationId);
+                ps.executeUpdate();
+            }
+
+            // Decrease booked count in schedule
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "UPDATE schedule SET booked_count = GREATEST(booked_count - 1, 0) WHERE id = ?")) {
+                ps.setLong(1, scheduleId);
+                ps.executeUpdate();
+            }
+
+            conn.commit();
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 }

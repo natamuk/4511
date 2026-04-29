@@ -4,25 +4,28 @@
  */
 package com.mycompany.system.controller;
 
+import com.mycompany.system.bean.RegistrationBean;
+import com.mycompany.system.bean.UserNotificationBean;
+import com.mycompany.system.db.RegistrationDB;
+import com.mycompany.system.db.UserNotificationDB;
 import com.mycompany.system.model.LoginUser;
-import com.mycompany.system.util.DBUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import java.io.IOException;
-import java.sql.*;
 
 @WebServlet("/patient/cancel-booking")
 public class PatientCancelBookingServlet extends HttpServlet {
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("loginUser") == null ||
                 !"patient".equals(session.getAttribute("role"))) {
-            writeJson(response, 401, false, "Unauthorized");
+            request.setAttribute("error", "Please login first");
+            request.getRequestDispatcher("/patient/myappointments").forward(request, response);
             return;
         }
 
@@ -31,83 +34,55 @@ public class PatientCancelBookingServlet extends HttpServlet {
         Long registrationId = parseLong(request.getParameter("registrationId"));
 
         if (registrationId == null) {
-            writeJson(response, 400, false, "Missing registrationId");
+            request.setAttribute("error", "Missing registration ID");
+            request.getRequestDispatcher("/patient/myappointments").forward(request, response);
             return;
         }
 
-        String checkSql = "SELECT r.schedule_id, r.status, s.clinic_id FROM registration r JOIN schedule s ON r.schedule_id = s.id WHERE r.id = ? AND r.patient_id = ?";
-        String updateRegSql = "UPDATE registration SET status = 2, cancel_time = NOW(), update_time = NOW() WHERE id = ?";
-        String updateScheduleSql = "UPDATE schedule SET booked_count = GREATEST(booked_count - 1, 0) WHERE id = ?";
-        String updateQueueSql = "UPDATE queue SET status = 'skipped', updated_time = NOW() WHERE patient_id = ? AND clinic_id = ? AND status = 'waiting'";
-        String insertNotificationSql = "INSERT INTO user_notification (user_id, user_type, title, message, type, is_read, create_time) VALUES (?, 3, ?, ?, 'warning', 0, NOW())";
+        try {
+            RegistrationBean reg = RegistrationDB.getById(registrationId);
 
-        try (Connection conn = DBUtil.getConnection()) {
-            conn.setAutoCommit(false);
-
-            Long scheduleId = null;
-            Long clinicId = null;
-            int status = 0;
-
-            try (PreparedStatement ps = conn.prepareStatement(checkSql)) {
-                ps.setLong(1, registrationId);
-                ps.setLong(2, patientId);
-                try (ResultSet rs = ps.executeQuery()) {
-                    if (!rs.next()) {
-                        conn.rollback();
-                        writeJson(response, 404, false, "Booking not found");
-                        return;
-                    }
-                    scheduleId = rs.getLong("schedule_id");
-                    clinicId = rs.getLong("clinic_id");
-                    status = rs.getInt("status");
-                }
-            }
-
-            if (status != 1) {
-                conn.rollback();
-                writeJson(response, 409, false, "Only booked appointments can be cancelled");
+            if (reg == null || !patientId.equals(reg.getPatientId())) {
+                request.setAttribute("error", "Booking not found or not yours");
+                request.getRequestDispatcher("/patient/myappointments").forward(request, response);
                 return;
             }
 
-            try (PreparedStatement ps = conn.prepareStatement(updateRegSql)) {
-                ps.setLong(1, registrationId);
-                ps.executeUpdate();
+            if (reg.getStatus() != 1) {
+                request.setAttribute("error", "Only booked appointments can be cancelled");
+                request.getRequestDispatcher("/patient/myappointments").forward(request, response);
+                return;
             }
 
-            try (PreparedStatement ps = conn.prepareStatement(updateScheduleSql)) {
-                ps.setLong(1, scheduleId);
-                ps.executeUpdate();
-            }
+            boolean success = RegistrationDB.cancelBooking(registrationId, reg.getScheduleId());
 
-            try (PreparedStatement ps = conn.prepareStatement(updateQueueSql)) {
-                ps.setLong(1, patientId);
-                ps.setLong(2, clinicId);
-                ps.executeUpdate();
-            }
+            if (success) {
+                UserNotificationBean note = new UserNotificationBean();
+                note.setUserId(patientId);
+                note.setUserType(3);
+                note.setTitle("Appointment Cancelled");
+                note.setMessage("Your appointment has been cancelled successfully.");
+                note.setType("warning");
+                UserNotificationDB.insert(note);
 
-            try (PreparedStatement ps = conn.prepareStatement(insertNotificationSql)) {
-                ps.setLong(1, patientId);
-                ps.setString(2, "Appointment Cancelled");
-                ps.setString(3, "Your appointment has been cancelled successfully.");
-                ps.executeUpdate();
+                request.setAttribute("success", "Booking cancelled successfully");
+            } else {
+                request.setAttribute("error", "Failed to cancel booking");
             }
-
-            conn.commit();
-            writeJson(response, 200, true, "Booking cancelled successfully");
 
         } catch (Exception e) {
             e.printStackTrace();
-            writeJson(response, 500, false, "Server error");
+            request.setAttribute("error", "Server error occurred");
         }
+
+        request.getRequestDispatcher("/patient/myappointments").forward(request, response);
     }
 
-    private Long parseLong(String v) {
-        try { return Long.parseLong(v); } catch (Exception e) { return null; }
-    }
-
-    private void writeJson(HttpServletResponse response, int status, boolean success, String message) throws IOException {
-        response.setStatus(status);
-        response.setContentType("application/json;charset=UTF-8");
-        response.getWriter().write("{\"success\":" + success + ",\"message\":\"" + message.replace("\"", "\\\"") + "\"}");
+    private Long parseLong(String value) {
+        try {
+            return Long.parseLong(value);
+        } catch (Exception e) {
+            return null;
+        }
     }
 }
