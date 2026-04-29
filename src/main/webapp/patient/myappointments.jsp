@@ -131,7 +131,7 @@
                                         <i class="fa-solid fa-qrcode"></i> QR
                                     </button>
                                     <% if ("Booked".equals(status)) { %>
-                                        <form action="<%= ctx %>/patient/cancel-booking" method="post" style="display:inline;" onsubmit="return confirm('Cancel this appointment?')">
+                                        <form action="<%= ctx %>/patient/cancel-booking" method="get" style="display:inline;" onsubmit="return confirm('Cancel this appointment?')">
                                             <input type="hidden" name="registrationId" value="<%= item.get("id") %>">
                                             <button type="submit" class="flex-1 px-4 py-2.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 font-medium transition">
                                                 <i class="fa-solid fa-xmark"></i> Cancel
