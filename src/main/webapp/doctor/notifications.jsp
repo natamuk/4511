@@ -4,11 +4,16 @@
     String ctx = request.getContextPath();
     List<Map<String, Object>> notifications = (List<Map<String, Object>>) request.getAttribute("notifications");
     if (notifications == null) notifications = new ArrayList<>();
+    List<Map<String, Object>> cancellations = (List<Map<String, Object>>) request.getAttribute("cancellations");
+    if (cancellations == null) cancellations = new ArrayList<>();
+    List<Map<String, Object>> operationalIssues = (List<Map<String, Object>>) request.getAttribute("operationalIssues");
+    if (operationalIssues == null) operationalIssues = new ArrayList<>();
+    
     Map<String, Object> profile = (Map<String, Object>) request.getAttribute("staffProfile");
     String realName = (profile != null && profile.get("realName") != null) ? profile.get("realName").toString() : "Doctor";
     String title = (profile != null && profile.get("title") != null) ? profile.get("title").toString() : "Physician";
     String dept = (profile != null && profile.get("departmentName") != null) ? profile.get("departmentName").toString() : "General";
-        String clinicName = (profile != null && profile.get("clinicName") != null) ? profile.get("clinicName").toString() : title;
+    String clinicName = (profile != null && profile.get("clinicName") != null) ? profile.get("clinicName").toString() : title;
     String avatar = (profile != null && profile.get("avatar") != null) ? profile.get("avatar").toString() : "https://picsum.photos/200";
 %>
 <!DOCTYPE html>
@@ -17,7 +22,9 @@
     <meta charset="UTF-8"><title>Doctor - Alerts</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
+        /* 样式与之前相同，略... 保持原有样式 */
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap');
         * { box-sizing: border-box; }
         body {
@@ -37,13 +44,43 @@
         .nav-item.active { background: rgba(14,165,233,0.14); color: #0369a1; font-weight: 700; }
         .card {
             background: white; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
         }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        th { background-color: #f8fafc; font-weight: 600; }
         ul { list-style: none; padding: 0; }
         li { padding: 0.75rem 0; border-bottom: 1px solid #e2e8f0; }
+        button { transition: all 0.15s ease; }
+        .btn-primary {
+            background-color: #3b82f6; color: white; padding: 0.5rem 1rem;
+            border: none; border-radius: 0.5rem; cursor: pointer;
+        }
+        .btn-primary:hover { background-color: #2563eb; }
+        .modal-mask {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(2px); z-index: 1000; display: none;
+            align-items: center; justify-content: center;
+        }
+        .modal-container {
+            background: white; border-radius: 1rem; width: 90%; max-width: 500px;
+            padding: 1.5rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        .badge-cancellation { background: #fee2e2; color: #b91c1c; }
+        .badge-manual { background: #fef3c7; color: #92400e; }
+        .badge-other { background: #e0e7ff; color: #3730a3; }
     </style>
 </head>
 <body class="min-h-screen">
 <div class="flex h-screen overflow-hidden relative">
+    <!-- 左侧导航栏（同前） -->
     <div class="w-80 glass shadow-2xl flex flex-col border-r border-white/50 z-40 fixed h-full">
         <div class="p-6 bg-gradient-to-r from-sky-700 to-blue-700">
             <div class="flex items-center gap-3">
@@ -72,11 +109,17 @@
             </div>
         </div>
     </div>
+
+    <!-- 右侧内容区 -->
     <div class="flex-1 flex flex-col min-w-0 ml-80">
         <div class="flex-1 overflow-auto p-4 md:p-8">
             <div class="max-w-6xl mx-auto">
-                <h2 class="text-2xl font-bold mb-6">Recent Alerts</h2>
+                <!-- 1. 系统通知 -->
                 <div class="card">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-bold"><i class="fa-solid fa-bell mr-2 text-yellow-500"></i>System Alerts</h2>
+                        <button onclick="openIssueModal()" class="btn-primary"><i class="fa-regular fa-flag mr-2"></i>Report Operational Issue</button>
+                    </div>
                     <ul>
                         <% for (Map<String, Object> n : notifications) { %>
                         <li><strong><%= n.get("title") %></strong>: <%= n.get("message") %> <span class="text-gray-400 text-sm">(<%= n.get("time") %>)</span></li>
@@ -84,9 +127,124 @@
                         <% if (notifications.isEmpty()) { %><li class="text-gray-500">No notifications.</li><% } %>
                     </ul>
                 </div>
+
+                <!-- 2. 取消预约历史（专门显示取消原因） -->
+                <div class="card">
+                    <h2 class="text-2xl font-bold mb-4"><i class="fa-solid fa-calendar-xmark mr-2 text-red-500"></i>Cancellation History</h2>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full">
+                            <thead>
+                                <tr><th>Cancellation Reason</th><th>Time</th>
+                            </thead>
+                            <tbody>
+                                <% for (Map<String, Object> c : cancellations) { 
+                                    String detail = (String) c.get("detail");
+                                    // 如果 detail 包含 "Cancelled. Reason:" 可以提取显示，或者直接显示
+                                %>
+                                <tr>
+                                    <td><%= detail %></td>
+                                    <td><%= c.get("createdAt") %></td>
+                                </tr>
+                                <% } %>
+                                <% if (cancellations.isEmpty()) { %>
+                                <tr><td colspan="2" class="text-center py-4">No cancellation records.</td></tr>
+                                <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 3. 运营问题报告（除取消外的其他问题） -->
+                <div class="card">
+                    <h2 class="text-2xl font-bold mb-4"><i class="fa-solid fa-triangle-exclamation mr-2 text-orange-500"></i>Operational Issues</h2>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full">
+                            <thead>
+                                <tr><th>Type</th><th>Detail</th><th>Time</th>
+                            </thead>
+                            <tbody>
+                                <% for (Map<String, Object> issue : operationalIssues) { 
+                                    String type = (String) issue.get("type");
+                                %>
+                                <tr>
+                                    <td><span class="status-badge badge-manual"><%= type %></span></td>
+                                    <td><%= issue.get("detail") %></td>
+                                    <td><%= issue.get("createdAt") %></td>
+                                </tr>
+                                <% } %>
+                                <% if (operationalIssues.isEmpty()) { %>
+                                <tr><td colspan="3" class="text-center py-4">No operational issues reported.</td></tr>
+                                <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- 报告运营问题模态框（同前） -->
+<div id="issueModal" class="modal-mask">
+    <div class="modal-container">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold"><i class="fa-regular fa-message text-blue-500 mr-2"></i>Report Operational Issue</h3>
+            <button onclick="closeIssueModal()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+        </div>
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Issue Type *</label>
+            <select id="issueType" class="w-full border border-gray-300 rounded-lg p-2.5">
+                <option value="Doctor Absent">👨‍⚕️ Doctor not available</option>
+                <option value="Service Pause">⏸️ Service pause</option>
+                <option value="Equipment Failure">🛠️ Equipment failure</option>
+                <option value="Clinic Issue">🏥 Clinic operational issue</option>
+                <option value="Other">📝 Other</option>
+            </select>
+        </div>
+        <div class="mb-5">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Detail Description *</label>
+            <textarea id="issueDetail" rows="3" class="w-full border border-gray-300 rounded-lg p-2.5" placeholder="Please describe the issue..."></textarea>
+        </div>
+        <div class="flex gap-3 justify-end">
+            <button onclick="closeIssueModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Cancel</button>
+            <button onclick="submitIssue()" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">Submit Report</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const modal = document.getElementById('issueModal');
+    function openIssueModal() { modal.style.display = 'flex'; }
+    function closeIssueModal() { modal.style.display = 'none'; document.getElementById('issueDetail').value = ''; }
+
+    async function submitIssue() {
+        const issueType = document.getElementById('issueType').value;
+        const detail = document.getElementById('issueDetail').value.trim();
+        if (!detail) {
+            Swal.fire('Error', 'Please describe the issue', 'error');
+            return;
+        }
+        Swal.fire({ title: 'Submitting...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        const formData = new URLSearchParams();
+        formData.append('issueType', issueType);
+        formData.append('detail', detail);
+        try {
+            const response = await fetch('<%= ctx %>/doctor/issue', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: formData
+            });
+            const data = await response.json();
+            if (data.success) {
+                Swal.fire('Success', 'Issue reported successfully', 'success').then(() => location.reload());
+            } else {
+                Swal.fire('Error', data.message || 'Failed to report', 'error');
+            }
+        } catch (err) {
+            Swal.fire('Network Error', err.message, 'error');
+        }
+        closeIssueModal();
+    }
+</script>
 </body>
 </html>

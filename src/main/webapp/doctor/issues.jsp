@@ -2,24 +2,21 @@
 <%@ page import="java.util.*" %>
 <%
     String ctx = request.getContextPath();
-    List<Map<String, Object>> issues = (List<Map<String, Object>>) request.getAttribute("issues");
-    if (issues == null) issues = new ArrayList<>();
     Map<String, Object> profile = (Map<String, Object>) request.getAttribute("staffProfile");
     String realName = (profile != null && profile.get("realName") != null) ? profile.get("realName").toString() : "Doctor";
     String title = (profile != null && profile.get("title") != null) ? profile.get("title").toString() : "Physician";
     String dept = (profile != null && profile.get("departmentName") != null) ? profile.get("departmentName").toString() : "General";
-        String clinicName = (profile != null && profile.get("clinicName") != null) ? profile.get("clinicName").toString() : title;
+    String clinicName = (profile != null && profile.get("clinicName") != null) ? profile.get("clinicName").toString() : title;
     String avatar = (profile != null && profile.get("avatar") != null) ? profile.get("avatar").toString() : "https://picsum.photos/200";
 %>
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8"><title>Doctor - Issues</title>
+    <meta charset="UTF-8"><title>Doctor - Report Issue</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        /* 樣式同前 */
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap');
         * { box-sizing: border-box; }
         body {
@@ -38,16 +35,27 @@
         .nav-item:hover { transform: translateX(8px); background: rgba(14,165,233,0.1); }
         .nav-item.active { background: rgba(14,165,233,0.14); color: #0369a1; font-weight: 700; }
         .card {
-            background: white; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            background: white; border-radius: 1rem; padding: 2rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            max-width: 600px; margin: 2rem auto;
         }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
-        th { background-color: #f8fafc; font-weight: 600; }
-        button { padding: 0.5rem 1rem; background-color: #3b82f6; color: white; border: none; border-radius: 0.5rem; cursor: pointer; }
+        button { transition: all 0.15s ease; }
+        .btn-primary {
+            background-color: #3b82f6; color: white; padding: 0.5rem 1rem;
+            border: none; border-radius: 0.5rem; cursor: pointer;
+        }
+        .btn-primary:hover { background-color: #2563eb; }
+        input, select, textarea {
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            width: 100%;
+        }
+        label { font-weight: 500; display: block; margin-bottom: 0.25rem; }
     </style>
 </head>
 <body class="min-h-screen">
 <div class="flex h-screen overflow-hidden relative">
+    <!-- 左侧导航栏（与原有结构完全相同，active 为 Issues） -->
     <div class="w-80 glass shadow-2xl flex flex-col border-r border-white/50 z-40 fixed h-full">
         <div class="p-6 bg-gradient-to-r from-sky-700 to-blue-700">
             <div class="flex items-center gap-3">
@@ -76,36 +84,73 @@
             </div>
         </div>
     </div>
+
+    <!-- 右侧内容区：仅显示报告表单，无历史列表 -->
     <div class="flex-1 flex flex-col min-w-0 ml-80">
-        <div class="flex-1 overflow-auto p-4 md:p-8">
-            <div class="max-w-6xl mx-auto">
-                <h2 class="text-2xl font-bold mb-6">Reported Issues</h2>
-                <div class="card">
-                    <button onclick="reportIssue()" class="mb-4">Report New Issue</button>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full">
-                            <thead><tr><th>Type</th><th>Detail</th><th>Time</th></tr></thead>
-                            <tbody>
-                                <% for (Map<String, Object> i : issues) { %>
-                                <tr><td><%= i.get("type") %></td><td><%= i.get("detail") %></td><td><%= i.get("createdAt") %></td></tr>
-                                <% } %>
-                                <% if (issues.isEmpty()) { %><tr><td colspan="3" class="text-center py-4">No issues reported.</td></tr><% } %>
-                            </tbody>
-                        </table>
-                    </div>
+        <div class="flex-1 overflow-auto p-4 md:p-8 flex items-center justify-center">
+            <div class="card w-full max-w-lg">
+                <div class="text-center mb-6">
+                    <i class="fa-solid fa-flag-checkered text-5xl text-blue-500 mb-3"></i>
+                    <h2 class="text-2xl font-bold">Report Operational Issue</h2>
+                    <p class="text-gray-500 text-sm mt-1">Use this form to report doctor absence, service pause, or other clinic issues</p>
                 </div>
+                <form id="reportForm">
+                    <div class="mb-4">
+                        <label>Issue Type <span class="text-red-500">*</span></label>
+                        <select id="issueType" required>
+                            <option value="Doctor Absent">👨‍⚕️ Doctor not available</option>
+                            <option value="Service Pause">⏸️ Service pause</option>
+                            <option value="Equipment Failure">🛠️ Equipment failure</option>
+                            <option value="Clinic Issue">🏥 Clinic operational issue</option>
+                            <option value="Other">📝 Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-5">
+                        <label>Detail Description <span class="text-red-500">*</span></label>
+                        <textarea id="detail" rows="4" class="w-full" placeholder="Please describe the issue in detail..."></textarea>
+                    </div>
+                    <button type="button" onclick="submitReport()" class="btn-primary w-full py-2 text-lg">Submit Report</button>
+                </form>
             </div>
         </div>
     </div>
 </div>
+
 <script>
-function reportIssue() {
-    let detail = prompt("Please describe the issue:");
-    if(detail && detail.trim()) {
-        fetch('<%= ctx %>/doctor/issue', { method:'POST', body:'detail='+encodeURIComponent(detail) })
-        .then(res=>res.json()).then(data=>{ if(data.success) location.reload(); else alert('Failed'); });
+    async function submitReport() {
+        const issueType = document.getElementById('issueType').value;
+        const detail = document.getElementById('detail').value.trim();
+        if (!detail) {
+            Swal.fire('Error', 'Please describe the issue', 'error');
+            return;
+        }
+        Swal.fire({ title: 'Submitting...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        const formData = new URLSearchParams();
+        formData.append('issueType', issueType);
+        formData.append('detail', detail);
+        try {
+            const response = await fetch('<%= ctx %>/doctor/issue', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: formData
+            });
+            const data = await response.json();
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Reported',
+                    text: 'The issue has been recorded. It will appear in Alerts.',
+                    confirmButtonText: 'OK'
+                }).then(() => {
+                    document.getElementById('detail').value = '';
+                });
+            } else {
+                Swal.fire('Error', data.message || 'Submission failed', 'error');
+            }
+        } catch (err) {
+            Swal.fire('Network Error', err.message, 'error');
+        }
     }
-}
 </script>
 </body>
 </html>

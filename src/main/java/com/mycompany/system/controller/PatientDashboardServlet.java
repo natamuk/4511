@@ -12,22 +12,35 @@ import java.util.Map;
 @WebServlet("/patient/dashboard")
 public class PatientDashboardServlet extends HttpServlet {
 
+    private PatientDashboardDao dao = new PatientDashboardDao();
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        System.out.println("PatientDashboardServlet.doGet() called");
+
         HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("loginUser") == null
-                || !"patient".equals(session.getAttribute("role"))) {
+        if (session == null || session.getAttribute("loginUser") == null) {
             response.sendRedirect(request.getContextPath() + "/login.jsp");
             return;
         }
-        LoginUser user = (LoginUser) session.getAttribute("loginUser");
-        PatientDashboardDao dao = new PatientDashboardDao();
-        request.setAttribute("patientProfile", dao.getPatientProfile(user.getId()));
-        request.setAttribute("appointments", dao.getUpcomingAppointments(user.getId()));
-        request.setAttribute("queueTickets", dao.getQueueTickets(user.getId()));
-        request.setAttribute("notifications", dao.getLatestNotices(user.getId()));
+        LoginUser loginUser = (LoginUser) session.getAttribute("loginUser");
+        Long patientId = loginUser.getId();
+
+        Map<String, Object> patientProfile = dao.getPatientProfile(patientId);
+        if (patientProfile == null || patientProfile.isEmpty()) {
+            response.sendRedirect(request.getContextPath() + "/login.jsp");
+            return;
+        }
+
+        List<Map<String, Object>> appointments = dao.getUpcomingAppointments(patientId);
+        List<Map<String, Object>> queueTickets = dao.getQueueTickets(patientId);
+        List<Map<String, Object>> notifications = dao.getLatestNotices(patientId);
+
+        request.setAttribute("patientProfile", patientProfile);
+        request.setAttribute("appointments", appointments);
+        request.setAttribute("queueTickets", queueTickets);
+        request.setAttribute("notifications", notifications);
+
         request.getRequestDispatcher("/patient/dashboard.jsp").forward(request, response);
     }
 }

@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.mycompany.system.controller;
 
 import com.google.gson.Gson;
@@ -33,7 +29,8 @@ public class DoctorIssueServlet extends HttpServlet {
         String detail = request.getParameter("detail");
 
         try (Connection conn = DBUtil.getConnection()) {
-            String sql = "INSERT INTO operation_log (user_type, user_id, operation, detail, create_time) VALUES (2, ?, 'Issue Report', ?, NOW())";
+            // 插入到 doctor_issue 表（而不是 operation_log），以便 Issues 页面统一显示
+            String sql = "INSERT INTO doctor_issue (doctor_id, issue_type, clinic_name, detail, status, created_at) VALUES (?, 'Manual Report', '', ?, 'Open', NOW())";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setLong(1, user.getId());
                 ps.setString(2, detail);
@@ -41,6 +38,7 @@ public class DoctorIssueServlet extends HttpServlet {
             }
             result.put("success", true);
         } catch (Exception e) {
+            e.printStackTrace();
             result.put("success", false);
         }
         response.getWriter().write(gson.toJson(result));

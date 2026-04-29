@@ -328,6 +328,40 @@ public class PatientDashboardDao {
     }
     return 0;  
 }
+    
+    public List<Map<String, Object>> getSlotAvailability(Long clinicId, String date) {
+    String sql = "SELECT cts.id, cts.period, cts.slot_time, cts.capacity, " +
+                 "COALESCE(COUNT(r.id), 0) AS booked_count, " +
+                 "(cts.capacity - COALESCE(COUNT(r.id), 0)) AS available " +
+                 "FROM clinic_time_slot cts " +
+                 "LEFT JOIN registration r ON cts.clinic_id = r.clinic_id " +
+                 "    AND cts.slot_time = r.slot_time " +
+                 "    AND r.reg_date = ? " +
+                 "    AND r.status NOT IN (2,6) " +
+                 "WHERE cts.clinic_id = ? AND cts.status = 1 " +
+                 "GROUP BY cts.id " +
+                 "ORDER BY FIELD(cts.period,'morning','afternoon','evening'), cts.slot_time";
+    List<Map<String, Object>> list = new ArrayList<>();
+    try (Connection conn = DBUtil.getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+        ps.setString(1, date);
+        ps.setLong(2, clinicId);
+        try (ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Map<String, Object> slot = new HashMap<>();
+                slot.put("period", rs.getString("period"));
+                slot.put("slotTime", rs.getString("slot_time"));
+                slot.put("capacity", rs.getInt("capacity"));
+                slot.put("bookedCount", rs.getInt("booked_count"));
+                slot.put("available", rs.getInt("available"));
+                list.add(slot);
+            }
+        }
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+    return list;
+}
 
 public List<Map<String, Object>> getAvailableWalkinClinics() {
     List<Map<String, Object>> result = new ArrayList<>();
