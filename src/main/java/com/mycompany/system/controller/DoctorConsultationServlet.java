@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.mycompany.system.controller;
 
 import com.google.gson.Gson;
@@ -35,41 +31,50 @@ public class DoctorConsultationServlet extends HttpServlet {
             return;
         }
 
-        Long regId = parseLong(request.getParameter("regId"));
+        Long id = parseLong(request.getParameter("regId"));       // 可能是 registration.id 或 queue.id
+        String source = request.getParameter("source");          // "REG" 或 "QUEUE"
         String diagnosis = request.getParameter("diagnosis");
         String prescription = request.getParameter("prescription");
         String advice = request.getParameter("advice");
 
-        if (regId == null) {
+        if (id == null) {
             result.put("success", false);
-            result.put("message", "Missing regId");
+            result.put("message", "Missing record ID");
             response.getWriter().write(gson.toJson(result));
             return;
         }
 
+        // 默认 source 为 REG（兼容旧请求）
+        if (source == null) source = "REG";
+
         try (Connection conn = DBUtil.getConnection()) {
             conn.setAutoCommit(false);
             try {
+                Long registrationId = null;
                 Long patientId = null;
                 Long doctorId = user.getId();
 
-                try (PreparedStatement ps = conn.prepareStatement(
-                        "SELECT patient_id FROM registration WHERE id = ? AND doctor_id = ?")) {
-                    ps.setLong(1, regId);
-                    ps.setLong(2, doctorId);
-                    try (ResultSet rs = ps.executeQuery()) {
-                        if (rs.next()) {
-                            patientId = rs.getLong("patient_id");
-                        } else {
-                            throw new Exception("Registration not found");
-                        }
-                    }
+                if ("REG".equalsIgnoreCase(source)) {
+                    registrationId = id;
+                    // 从 registration 获取 patient_id
+                    patientId = getPatientIdByRegistration(conn, registrationId);
+                    if (patientId == null) throw new Exception("Registration not found");
+                } else if ("QUEUE".equalsIgnoreCase(source)) {
+                    // 从 queue 表获取 patient_id，同时尝试找到关联的 registration
+                    patientId = getPatientIdByQueue(conn, id);
+                    if (patientId == null) throw new Exception("Queue record not found");
+
+                    // 尝试查找该患者今天是否有对应的预约（同一科室/医生）, 如果没有则创建临时 registration
+                    registrationId = findOrCreateRegistrationForQueue(conn, patientId, doctorId, id);
+                } else {
+                    throw new Exception("Unknown source type: " + source);
                 }
 
+                // 插入 consultation 记录
                 try (PreparedStatement ps = conn.prepareStatement(
                         "INSERT INTO consultation (registration_id, patient_id, doctor_id, diagnosis, medical_advice, prescription, consultation_time, status) " +
                                 "VALUES (?, ?, ?, ?, ?, ?, NOW(), 2)")) {
-                    ps.setLong(1, regId);
+                    ps.setLong(1, registrationId);
                     ps.setLong(2, patientId);
                     ps.setLong(3, doctorId);
                     ps.setString(4, diagnosis);
@@ -78,15 +83,26 @@ public class DoctorConsultationServlet extends HttpServlet {
                     ps.executeUpdate();
                 }
 
-                try (PreparedStatement ps = conn.prepareStatement(
-                        "UPDATE registration SET status = 5, update_time = NOW() WHERE id = ? AND doctor_id = ?")) {
-                    ps.setLong(1, regId);
-                    ps.setLong(2, doctorId);
-                    ps.executeUpdate();
+                // 更新原记录状态为已完成 (status 5)
+                if ("REG".equalsIgnoreCase(source)) {
+                    try (PreparedStatement ps = conn.prepareStatement(
+                            "UPDATE registration SET status = 5, update_time = NOW() WHERE id = ? AND doctor_id = ?")) {
+                        ps.setLong(1, registrationId);
+                        ps.setLong(2, doctorId);
+                        ps.executeUpdate();
+                    }
+                } else if ("QUEUE".equalsIgnoreCase(source)) {
+                    try (PreparedStatement ps = conn.prepareStatement(
+                            "UPDATE queue SET status = 'completed', updated_time = NOW() WHERE id = ?")) {
+                        ps.setLong(1, id);
+                        ps.executeUpdate();
+                    }
                 }
 
+                // 发送通知给患者
                 try (PreparedStatement ps = conn.prepareStatement(
-                        "INSERT INTO user_notification (user_id, user_type, title, message, type, is_read, create_time) VALUES (?, 3, ?, ?, 'success', 0, NOW())")) {
+                        "INSERT INTO user_notification (user_id, user_type, title, message, type, is_read, create_time) " +
+                                "VALUES (?, 3, ?, ?, 'success', 0, NOW())")) {
                     ps.setLong(1, patientId);
                     ps.setString(2, "Consultation Completed");
                     ps.setString(3, "Your consultation has been completed. Please check your prescription.");
@@ -99,13 +115,65 @@ public class DoctorConsultationServlet extends HttpServlet {
                 conn.rollback();
                 result.put("success", false);
                 result.put("message", e.getMessage());
+                e.printStackTrace();
             }
         } catch (Exception e) {
             result.put("success", false);
             result.put("message", e.getMessage());
         }
-        
+
         response.getWriter().write(gson.toJson(result));
+    }
+
+    // ========== 辅助方法 ==========
+    private Long getPatientIdByRegistration(Connection conn, Long registrationId) throws Exception {
+        String sql = "SELECT patient_id FROM registration WHERE id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, registrationId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getLong("patient_id");
+                return null;
+            }
+        }
+    }
+
+    private Long getPatientIdByQueue(Connection conn, Long queueId) throws Exception {
+        String sql = "SELECT patient_id FROM queue WHERE id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, queueId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getLong("patient_id");
+                return null;
+            }
+        }
+    }
+
+    private Long findOrCreateRegistrationForQueue(Connection conn, Long patientId, Long doctorId, Long queueId) throws Exception {
+        // 先查找今天是否有此医生、患者的未完成预约
+        String findSql = "SELECT id FROM registration WHERE patient_id = ? AND doctor_id = ? AND reg_date = CURDATE() AND status IN (1,3,4) LIMIT 1";
+        try (PreparedStatement ps = conn.prepareStatement(findSql)) {
+            ps.setLong(1, patientId);
+            ps.setLong(2, doctorId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getLong("id");
+            }
+        }
+
+        // 如果没有，创建一个简单的 registration 记录（用于病历关联）
+        String insertSql = "INSERT INTO registration (reg_no, patient_id, doctor_id, department_id, schedule_id, reg_date, queue_no, fee, status, create_time, update_time) " +
+                "VALUES (?, ?, ?, (SELECT department_id FROM doctor WHERE id = ?), NULL, CURDATE(), 0, 0.00, 5, NOW(), NOW())";
+        String regNo = "QR-" + System.currentTimeMillis();
+        try (PreparedStatement ps = conn.prepareStatement(insertSql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+            ps.setString(1, regNo);
+            ps.setLong(2, patientId);
+            ps.setLong(3, doctorId);
+            ps.setLong(4, doctorId);
+            ps.executeUpdate();
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                if (rs.next()) return rs.getLong(1);
+                else throw new Exception("Failed to create registration record");
+            }
+        }
     }
 
     private Long parseLong(String v) {

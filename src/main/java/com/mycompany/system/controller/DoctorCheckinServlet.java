@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.mycompany.system.controller;
 
 import com.google.gson.Gson;
@@ -15,15 +11,42 @@ import java.io.IOException;
 import java.sql.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @WebServlet("/doctor/checkin")
 public class DoctorCheckinServlet extends HttpServlet {
     private final Gson gson = new Gson();
 
+    // ================== GET 显示待诊页面（新增） ==================
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("loginUser") == null ||
+                !"doctor".equals(session.getAttribute("role"))) {
+            response.sendRedirect(request.getContextPath() + "/login.jsp");
+            return;
+        }
+        LoginUser user = (LoginUser) session.getAttribute("loginUser");
+        Long doctorId = user.getId();
+
+        // 获取医生个人信息（复用 Dashboard 的方法，或直接查询）
+        Map<String, Object> profile = getStaffProfile(doctorId);
+        // 获取待诊记录（状态为 3=Called 或 4=Consulting）
+        List<Map<String, Object>> pendingConsultations = getPendingConsultations(doctorId);
+
+        request.setAttribute("staffProfile", profile);
+        request.setAttribute("pendingConsultations", pendingConsultations);
+        request.getRequestDispatcher("/doctor/checkin.jsp").forward(request, response);
+    }
+
+    // ================== POST 处理签到（原有逻辑） ==================
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
         response.setContentType("application/json;charset=UTF-8");
         Map<String, Object> result = new HashMap<>();
 
@@ -42,6 +65,7 @@ public class DoctorCheckinServlet extends HttpServlet {
         LocalDate today = LocalDate.now();
 
         try (Connection conn = DBUtil.getConnection()) {
+            // 检查是否已签到
             String checkSql = "SELECT checkin_time FROM doctor_attendance WHERE doctor_id = ? AND date = ? LIMIT 1";
             try (PreparedStatement ps = conn.prepareStatement(checkSql)) {
                 ps.setLong(1, doctorId);
@@ -60,6 +84,7 @@ public class DoctorCheckinServlet extends HttpServlet {
                 }
             }
 
+            // 执行签到
             String insertSql = "INSERT INTO doctor_attendance (doctor_id, checkin_time, date, status) VALUES (?, NOW(), ?, 1)";
             try (PreparedStatement ps = conn.prepareStatement(insertSql)) {
                 ps.setLong(1, doctorId);
@@ -88,5 +113,54 @@ public class DoctorCheckinServlet extends HttpServlet {
         }
 
         response.getWriter().write(gson.toJson(result));
+    }
+
+    // ---------- 辅助方法 ----------
+    private Map<String, Object> getStaffProfile(Long doctorId) {
+        String sql = "SELECT d.id, d.username, d.real_name, d.title, d.avatar, d.department_id, dept.dept_name " +
+                "FROM doctor d JOIN department dept ON d.department_id = dept.id WHERE d.id = ?";
+        Map<String, Object> profile = new HashMap<>();
+        try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, doctorId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    profile.put("id", rs.getLong("id"));
+                    profile.put("username", rs.getString("username"));
+                    profile.put("realName", rs.getString("real_name"));
+                    profile.put("title", rs.getString("title"));
+                    profile.put("avatar", rs.getString("avatar"));
+                    profile.put("departmentId", rs.getLong("department_id"));
+                    profile.put("departmentName", rs.getString("dept_name"));
+                }
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        return profile;
+    }
+
+    private List<Map<String, Object>> getPendingConsultations(Long doctorId) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        // 仅查询 registration 表中状态为 3 (Called) 或 4 (Consulting) 的记录，避免 queue 来源导致病历提交失败
+        String sql = "SELECT r.id, r.reg_no AS ticketNo, p.real_name AS patient, dep.dept_name AS service, r.status AS statusCode, 'REG' AS source " +
+                "FROM registration r " +
+                "JOIN patient p ON r.patient_id = p.id " +
+                "JOIN department dep ON r.department_id = dep.id " +
+                "WHERE r.doctor_id = ? AND r.status IN (3,4) AND r.reg_date = CURDATE() " +
+                "ORDER BY r.queue_no";
+        try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, doctorId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> row = new HashMap<>();
+                    row.put("id", rs.getLong("id"));
+                    row.put("ticketNo", rs.getString("ticketNo"));
+                    row.put("patient", rs.getString("patient"));
+                    row.put("service", rs.getString("service"));
+                    row.put("statusCode", rs.getInt("statusCode"));
+                    row.put("source", rs.getString("source"));
+                    list.add(row);
+                }
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        return list;
     }
 }
