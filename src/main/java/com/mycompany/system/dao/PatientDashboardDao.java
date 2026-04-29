@@ -312,29 +312,46 @@ public class PatientDashboardDao {
         }
         return result;
     }
-
-    public List<Map<String, Object>> getAvailableWalkinClinics() {
-        List<Map<String, Object>> result = new ArrayList<>();
-        if (!isWalkinQueueEnabled()) {
-            return result;
-        }
-
-        Set<Long> allowedIds = getWalkinEnabledClinicIds();
-        if (allowedIds.isEmpty()) {
-            return result;
-        }
-
-        List<Map<String, Object>> allClinics = getClinics();
-        for (Map<String, Object> clinic : allClinics) {
-            Long id = (Long) clinic.get("id");
-            if (allowedIds.contains(id)) {
-                Map<String, Object> simplified = new HashMap<>();
-                simplified.put("id", id);
-                simplified.put("name", clinic.get("name"));
-                simplified.put("location", clinic.get("location"));
-                result.add(simplified);
+    
+    private int countWaitingByClinic(Long clinicId) {
+    String sql = "SELECT COUNT(*) FROM queue WHERE clinic_id = ? AND status = 'waiting' AND DATE(created_time) = CURDATE()";
+    try (Connection conn = DBUtil.getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+        ps.setLong(1, clinicId);
+        try (ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
             }
         }
+    } catch (SQLException e) {
+        e.printStackTrace();
+    }
+    return 0;  
+}
+
+public List<Map<String, Object>> getAvailableWalkinClinics() {
+    List<Map<String, Object>> result = new ArrayList<>();
+    if (!isWalkinQueueEnabled()) {
         return result;
     }
+
+    Set<Long> allowedIds = getWalkinEnabledClinicIds();
+    if (allowedIds.isEmpty()) {
+        return result;
+    }
+
+    List<Map<String, Object>> allClinics = getClinics();
+    for (Map<String, Object> clinic : allClinics) {
+        Long id = (Long) clinic.get("id");
+        if (allowedIds.contains(id)) {
+            Map<String, Object> availableClinic = new HashMap<>();
+            availableClinic.put("id", id);
+            availableClinic.put("name", clinic.get("name"));
+            availableClinic.put("location", clinic.get("location"));
+            availableClinic.put("waitingCount", countWaitingByClinic(id)); // 加上等待人數
+            result.add(availableClinic);
+        }
+    }
+    return result;
+}
 }

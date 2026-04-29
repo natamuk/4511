@@ -57,7 +57,7 @@
         <div class="p-6 flex-1 flex flex-col overflow-y-auto">
             <div class="flex items-center gap-4 p-4 glass rounded-3xl mb-8">
                 <img src="<%= avatar %>" class="w-14 h-14 rounded-2xl ring-4 ring-white object-cover" alt="avatar">
-                <div><p class="font-semibold"><%= realName %></p><p class="text-sky-600 text-sm"><%= clinicName %></p><p class="text-xs text-gray-500 mt-1"><%= dept %></p></div>
+                <div><p class="font-semibold"><%= realName %></p><p class="text-sky-600 text-sm"><%= clinicName %></p></div>
             </div>
             <nav class="flex flex-col gap-1">
                 <a href="<%= ctx %>/doctor/dashboard" class="nav-item flex items-center gap-3 px-5 py-3 rounded-2xl"><i class="fa-solid fa-chart-pie w-5"></i><span>Dashboard</span></a>

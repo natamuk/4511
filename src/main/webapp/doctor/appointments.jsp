@@ -100,7 +100,6 @@
                 <div>
                     <p class="font-semibold"><%= realName %></p>
                     <p class="text-sky-600 text-sm"><%= clinicName %></p>
-                    <p class="text-xs text-gray-500 mt-1"><%= dept %></p>
                 </div>
             </div>
             <nav class="flex flex-col gap-1">
