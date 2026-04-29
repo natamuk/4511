@@ -119,10 +119,12 @@
                                         <div class="text-sm mt-3 queue-clinic-meta"><i class="fa-solid fa-users mr-1"></i> Current waiting: <span class="font-semibold text-gray-800"><%= waitingCount %></span></div>
                                     </div>
                                     <div>
-                                        <form action="<%= ctx %>/patient/queue/join" method="post" onsubmit="return confirm('Join <%= clinicName %> queue?')">
-                                            <input type="hidden" name="clinicId" value="<%= clinicId %>">
-                                            <button type="submit" class="w-full px-4 py-2 rounded-xl font-medium bg-emerald-600 text-white">Join Queue</button>
-                                        </form>
+                                        <!-- 改为 AJAX 方式，不再使用传统的表单提交 -->
+                                        <button type="button" class="join-queue-btn w-full px-4 py-2 rounded-xl font-medium bg-emerald-600 text-white hover:bg-emerald-700 transition"
+                                                data-clinic-id="<%= clinicId %>"
+                                                data-clinic-name="<%= clinicName %>">
+                                            Join Queue
+                                        </button>
                                     </div>
                                 </div>
                             <% } } %>
@@ -143,6 +145,7 @@
                                 else statusClass = "bg-green-100 text-green-700 border-green-200";
                                 String clinicName = (String) item.get("clinicName");
                                 String ticketNo = (String) item.get("queueNo");
+                                if (clinicName == null) clinicName = "Unknown Clinic";
                         %>
                             <div class="p-5 border rounded-2xl bg-white flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
                                 <div><p class="font-semibold text-lg text-gray-800"><%= clinicName %></p><p class="text-sm text-gray-500 mt-1">Ticket Number: <span class="font-mono font-bold text-lg text-indigo-600"><%= ticketNo %></span></p></div>
@@ -159,6 +162,7 @@
     document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-US', {
         weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
     });
+
     function logout() {
         Swal.fire({
             title: 'Confirm logout?',
@@ -168,6 +172,68 @@
             cancelButtonText: 'Cancel'
         }).then(r => { if (r.isConfirmed) window.location.href = '<%= ctx %>/login.jsp'; });
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const buttons = document.querySelectorAll('.join-queue-btn');
+        buttons.forEach(btn => {
+            btn.addEventListener('click', async function(e) {
+                e.preventDefault();
+                const clinicId = this.dataset.clinicId;
+                const clinicName = this.dataset.clinicName;
+
+                const confirm = await Swal.fire({
+                    title: 'Join Queue',
+                    text: `Join ${clinicName} walk-in queue?`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, join',
+                    cancelButtonText: 'Cancel'
+                });
+                if (!confirm.isConfirmed) return;
+
+                this.disabled = true;
+                const originalText = this.innerText;
+                this.innerText = 'Joining...';
+
+                try {
+                    const formData = new URLSearchParams();
+                    formData.append('clinicId', clinicId);
+                    const response = await fetch('<%= ctx %>/patient/queue/join', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: formData
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        await Swal.fire({
+                            title: 'Success!',
+                            text: `You joined the queue successfully. Ticket number: ${result.queueNo}`,
+                            icon: 'success',
+                            confirmButtonText: 'OK'
+                        });
+                        window.location.reload();
+                    } else {
+                        await Swal.fire({
+                            title: 'Failed',
+                            text: result.message,
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                        this.disabled = false;
+                        this.innerText = originalText;
+                    }
+                } catch (err) {
+                    await Swal.fire({
+                        title: 'Network Error',
+                        text: 'Please try again later.',
+                        icon: 'error'
+                    });
+                    this.disabled = false;
+                    this.innerText = originalText;
+                }
+            });
+        });
+    });
 </script>
 </body>
 </html>

@@ -11,38 +11,41 @@ import java.util.*;
 
 public class StaffDashboardDao {
 
-    public Map<String, Object> getStaffProfile(Long staffId) {
-        String sql =
-                "SELECT d.id, d.username, d.real_name, d.phone, d.email, d.avatar, d.status, dep.dept_name " +
-                "FROM doctor d " +
-                "JOIN department dep ON d.department_id = dep.id " +
-                "WHERE d.id = ?";
+public Map<String, Object> getStaffProfile(Long staffId) {
+    String sql =
+        "SELECT d.id, d.username, d.real_name, d.phone, d.email, d.avatar, d.status, d.title, " +
+        "dep.dept_name AS departmentName, " +
+        "c.clinic_name AS clinicName " +          
+        "FROM doctor d " +
+        "JOIN department dep ON d.department_id = dep.id " +
+        "LEFT JOIN clinic c ON d.primary_clinic_id = c.id " +   
+        "WHERE d.id = ?";
 
-        Map<String, Object> profile = new HashMap<>();
+    Map<String, Object> profile = new HashMap<>();
 
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+    try (Connection conn = DBUtil.getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setLong(1, staffId);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    profile.put("id", rs.getLong("id"));
-                    profile.put("username", rs.getString("username"));
-                    profile.put("realName", rs.getString("real_name"));
-                    profile.put("phone", rs.getString("phone"));
-                    profile.put("email", rs.getString("email"));
-                    profile.put("avatar", rs.getString("avatar"));
-                    profile.put("status", rs.getInt("status"));
-                    profile.put("clinicName", rs.getString("dept_name"));
-                }
+        ps.setLong(1, staffId);
+        try (ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                profile.put("id", rs.getLong("id"));
+                profile.put("username", rs.getString("username"));
+                profile.put("realName", rs.getString("real_name"));
+                profile.put("phone", rs.getString("phone"));
+                profile.put("email", rs.getString("email"));
+                profile.put("avatar", rs.getString("avatar"));
+                profile.put("status", rs.getInt("status"));
+                profile.put("title", rs.getString("title"));
+                profile.put("departmentName", rs.getString("departmentName"));
+                profile.put("clinicName", rs.getString("clinicName"));   
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
-
-        return profile;
+    } catch (Exception e) {
+        e.printStackTrace();
     }
+    return profile;
+}
 
     public List<Map<String, Object>> getTodayAppointments(Long staffId) {
         String sql =

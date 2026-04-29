@@ -8,6 +8,7 @@
     String realName = (profile != null && profile.get("realName") != null) ? profile.get("realName").toString() : "Doctor";
     String title = (profile != null && profile.get("title") != null) ? profile.get("title").toString() : "Physician";
     String dept = (profile != null && profile.get("departmentName") != null) ? profile.get("departmentName").toString() : "General";
+    String clinicName = (profile != null && profile.get("clinicName") != null) ? profile.get("clinicName").toString() : title;
     String avatar = (profile != null && profile.get("avatar") != null) ? profile.get("avatar").toString() : "https://picsum.photos/200";
 %>
 <!DOCTYPE html>
@@ -83,7 +84,6 @@
 </head>
 <body class="min-h-screen">
 <div class="flex h-screen overflow-hidden relative">
-    <!-- 左側導航欄 -->
     <div class="w-80 glass shadow-2xl flex flex-col border-r border-white/50 z-40 fixed h-full">
         <div class="p-6 bg-gradient-to-r from-sky-700 to-blue-700">
             <div class="flex items-center gap-3">
@@ -99,7 +99,7 @@
                 <img src="<%= avatar %>" class="w-14 h-14 rounded-2xl ring-4 ring-white object-cover" alt="avatar">
                 <div>
                     <p class="font-semibold"><%= realName %></p>
-                    <p class="text-sky-600 text-sm"><%= title %></p>
+                    <p class="text-sky-600 text-sm"><%= clinicName %></p>
                     <p class="text-xs text-gray-500 mt-1"><%= dept %></p>
                 </div>
             </div>
@@ -121,7 +121,6 @@
             </div>
         </div>
     </div>
-    <!-- 右側內容區 -->
     <div class="flex-1 flex flex-col min-w-0 ml-80">
         <div class="flex-1 overflow-auto p-4 md:p-8">
             <div class="max-w-6xl mx-auto">

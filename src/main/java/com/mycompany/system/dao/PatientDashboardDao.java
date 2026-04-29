@@ -34,18 +34,16 @@ public class PatientDashboardDao {
         return profile;
     }
 
-    // ========== 修正的关键方法 ==========
     public List<Map<String, Object>> getUpcomingAppointments(Long patientId) {
-        String sql = "SELECT r.id, r.reg_no, r.reg_date, r.slot_time, r.queue_no, r.status, " +
-                     "c.clinic_name AS clinicName, d.real_name AS doctorName " +
-                     "FROM registration r " +
-                     "JOIN clinic c ON r.clinic_id = c.id " +
-                     "JOIN doctor d ON r.doctor_id = d.id " +
-                     "WHERE r.patient_id = ? AND r.status IN (1,3,4,5) " +
-                     "ORDER BY r.reg_date ASC, r.slot_time ASC";
+        String sql = "SELECT r.id, r.reg_no, r.reg_date, r.slot_time, r.queue_no, r.status, "
+                + "c.clinic_name AS clinicName, d.real_name AS doctorName "
+                + "FROM registration r "
+                + "JOIN clinic c ON r.clinic_id = c.id "
+                + "JOIN doctor d ON r.doctor_id = d.id "
+                + "WHERE r.patient_id = ? AND r.status IN (1,3,4,5) "
+                + "ORDER BY r.reg_date ASC, r.slot_time ASC";
         List<Map<String, Object>> list = new ArrayList<>();
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, patientId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -66,7 +64,6 @@ public class PatientDashboardDao {
         }
         return list;
     }
-    // =================================
 
     public List<Map<String, Object>> getLatestNotices(Long patientId) {
         List<Map<String, Object>> list = new ArrayList<>();
@@ -106,9 +103,15 @@ public class PatientDashboardDao {
             list.sort((a, b) -> {
                 Timestamp ta = (Timestamp) a.get("time");
                 Timestamp tb = (Timestamp) b.get("time");
-                if (ta == null && tb == null) return 0;
-                if (ta == null) return 1;
-                if (tb == null) return -1;
+                if (ta == null && tb == null) {
+                    return 0;
+                }
+                if (ta == null) {
+                    return 1;
+                }
+                if (tb == null) {
+                    return -1;
+                }
                 return tb.compareTo(ta);
             });
 
@@ -223,7 +226,7 @@ public class PatientDashboardDao {
                     row.put("queueNo", rs.getString("queue_no"));
                     row.put("createdTime", rs.getTimestamp("created_time"));
                     row.put("status", rs.getString("status"));
-                    row.put("clinic", rs.getString("clinic_name"));
+                    row.put("clinicName", rs.getString("clinic_name"));   
                     list.add(row);
                 }
             }
@@ -258,22 +261,27 @@ public class PatientDashboardDao {
 
     private String regStatusToText(int status) {
         switch (status) {
-            case 1: return "Booked";
-            case 2: return "Cancelled";
-            case 3: return "Called";
-            case 4: return "Consulting";
-            case 5: return "Completed";
-            case 6: return "Transferred";
-            default: return "Unknown";
+            case 1:
+                return "Booked";
+            case 2:
+                return "Cancelled";
+            case 3:
+                return "Called";
+            case 4:
+                return "Consulting";
+            case 5:
+                return "Completed";
+            case 6:
+                return "Transferred";
+            default:
+                return "Unknown";
         }
     }
 
     public Map<String, String> getSettings() {
         Map<String, String> settings = new HashMap<>();
         String sql = "SELECT setting_key, setting_value FROM system_setting";
-        try (Connection conn = DBUtil.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+        try (Connection conn = DBUtil.getConnection(); Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
                 settings.put(rs.getString("setting_key"), rs.getString("setting_value"));
             }
@@ -298,7 +306,8 @@ public class PatientDashboardDao {
             for (String id : ids.split(",")) {
                 try {
                     result.add(Long.parseLong(id.trim()));
-                } catch (NumberFormatException ignored) {}
+                } catch (NumberFormatException ignored) {
+                }
             }
         }
         return result;
@@ -306,10 +315,14 @@ public class PatientDashboardDao {
 
     public List<Map<String, Object>> getAvailableWalkinClinics() {
         List<Map<String, Object>> result = new ArrayList<>();
-        if (!isWalkinQueueEnabled()) return result;
+        if (!isWalkinQueueEnabled()) {
+            return result;
+        }
 
         Set<Long> allowedIds = getWalkinEnabledClinicIds();
-        if (allowedIds.isEmpty()) return result;
+        if (allowedIds.isEmpty()) {
+            return result;
+        }
 
         List<Map<String, Object>> allClinics = getClinics();
         for (Map<String, Object> clinic : allClinics) {

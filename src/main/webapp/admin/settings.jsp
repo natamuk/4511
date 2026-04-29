@@ -321,7 +321,6 @@
     });
     document.getElementById('save-settings-btn').addEventListener('click', saveSettings);
     loadSettings();
-    document.getElementById('current-date').innerText = new Date().toLocaleDateString('zh-CN');
         </script>
     </body>
 </html>

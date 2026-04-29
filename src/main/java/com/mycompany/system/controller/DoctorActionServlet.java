@@ -18,10 +18,12 @@ import java.util.Map;
 
 @WebServlet("/doctor/action")
 public class DoctorActionServlet extends HttpServlet {
+
     private final Gson gson = new Gson();
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
         String action = request.getParameter("action");
         Long id = parseLong(request.getParameter("id"));
         Long statusParam = parseLong(request.getParameter("status"));
@@ -33,8 +35,12 @@ public class DoctorActionServlet extends HttpServlet {
             respond(request, response, false, "Unauthorized", HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
-        if (action == null || id == null) {
-            respond(request, response, false, "Missing parameters", HttpServletResponse.SC_BAD_REQUEST);
+        if (action == null) {
+            respond(request, response, false, "Missing action", HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
+        if (!"callnext".equalsIgnoreCase(action) && id == null) {
+            respond(request, response, false, "Missing id", HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
 
@@ -54,7 +60,9 @@ public class DoctorActionServlet extends HttpServlet {
                         success = true;
                         break;
                     case "update":
-                        if (statusParam == null) throw new IllegalArgumentException("Missing status");
+                        if (statusParam == null) {
+                            throw new IllegalArgumentException("Missing status");
+                        }
                         if ("QUEUE".equalsIgnoreCase(sourceType)) {
                             String qStatus = statusParam == 3 ? "called" : (statusParam == 4 ? "consulting" : "completed");
                             DoctorQueueService.updateStatus(conn, id, qStatus);
@@ -107,12 +115,17 @@ public class DoctorActionServlet extends HttpServlet {
             response.setStatus(success ? successStatus : HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             Map<String, Object> r = new HashMap<>();
             r.put("success", success);
-            if (!success) r.put("message", message == null ? "Operation failed" : message);
+            if (!success) {
+                r.put("message", message == null ? "Operation failed" : message);
+            }
             response.getWriter().write(gson.toJson(r));
         } else {
             HttpSession session = request.getSession(true);
-            if (success) session.setAttribute("flash_success", "Operation succeeded");
-            else session.setAttribute("flash_error", message == null ? "Operation failed" : message);
+            if (success) {
+                session.setAttribute("flash_success", "Operation succeeded");
+            } else {
+                session.setAttribute("flash_error", message == null ? "Operation failed" : message);
+            }
             String referer = request.getHeader("Referer");
             if (referer == null || referer.isBlank()) {
                 response.sendRedirect(request.getContextPath() + "/doctor/dashboard");
