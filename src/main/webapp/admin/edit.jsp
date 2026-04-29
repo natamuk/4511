@@ -135,10 +135,6 @@
                 <input type="text" name="realName" value="<%= admin.getRealName() %>" class="w-full px-4 py-3 border rounded-2xl">
             </div>
             <div>
-                <label class="block text-sm font-semibold mb-2">Username</label>
-                <input type="text" name="username" value="<%= admin.getUsername() %>" class="w-full px-4 py-3 border rounded-2xl">
-            </div>
-            <div>
                 <label class="block text-sm font-semibold mb-2">Phone</label>
                 <input type="text" name="phone" value="<%= admin.getPhone() != null ? admin.getPhone() : "" %>" class="w-full px-4 py-3 border rounded-2xl">
             </div>
