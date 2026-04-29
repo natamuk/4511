@@ -1,70 +1,86 @@
 /*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ * Doctor Profile Update Servlet
  */
 package com.mycompany.system.controller;
 
-import com.google.gson.Gson;
 import com.mycompany.system.bean.DoctorBean;
 import com.mycompany.system.db.DoctorDB;
 import com.mycompany.system.model.LoginUser;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
-
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 @WebServlet("/doctor/update-profile")
 public class DoctorProfileUpdateServlet extends HttpServlet {
-    private final Gson gson = new Gson();
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        response.setContentType("application/json;charset=UTF-8");
-        Map<String, Object> result = new HashMap<>();
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
 
         HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("loginUser") == null || !"doctor".equals(session.getAttribute("role"))) {
-            writeJson(response, 401, false, "Unauthorized", result);
+        if (session == null || session.getAttribute("loginUser") == null ||
+                !"doctor".equals(session.getAttribute("role"))) {
+            response.sendRedirect(request.getContextPath() + "/login.jsp");
             return;
         }
 
-        LoginUser user = (LoginUser) session.getAttribute("loginUser");
-        Long doctorId = user.getId();
-        String oldPwd = request.getParameter("oldPwd");
-        String newPwd = request.getParameter("newPwd");
-
-        if (newPwd == null || newPwd.trim().isEmpty()) {
-            writeJson(response, 200, true, "Profile updated successfully", result);
-            return;
-        }
+        LoginUser loginUser = (LoginUser) session.getAttribute("loginUser");
+        Long doctorId = loginUser.getId();
+        String action = request.getParameter("action");
 
         try {
-            DoctorBean doctor = DoctorDB.getById(doctorId);
-            if (doctor == null) {
-                writeJson(response, 404, false, "User not found", result);
-                return;
-            }
-            if (!doctor.getPassword().equals(oldPwd)) {
-                writeJson(response, 400, false, "Incorrect current password", result);
-                return;
-            }
-            if (DoctorDB.updatePassword(doctorId, newPwd)) {
-                writeJson(response, 200, true, "Password updated successfully", result);
+            if ("changePassword".equals(action)) {
+                // ==================== CHANGE PASSWORD ====================
+                String oldPwd = request.getParameter("oldPwd");
+                String newPwd = request.getParameter("newPwd");
+
+                if (oldPwd == null || newPwd == null || newPwd.trim().isEmpty()) {
+                    request.setAttribute("error", "Current and new password are required");
+                } else {
+                    DoctorBean doctor = DoctorDB.getById(doctorId);
+                    if (doctor == null || !doctor.getPassword().equals(oldPwd)) {
+                        request.setAttribute("error", "Current password is incorrect");
+                    } else if (DoctorDB.updatePassword(doctorId, newPwd)) {
+                        request.setAttribute("success", "Password updated successfully");
+                    } else {
+                        request.setAttribute("error", "Failed to update password");
+                    }
+                }
+
             } else {
-                writeJson(response, 500, false, "Failed to update password", result);
+                // ==================== UPDATE PROFILE ====================
+                DoctorBean doctor = new DoctorBean();
+                doctor.setId(doctorId);
+                doctor.setRealName(request.getParameter("realName"));
+                doctor.setPhone(request.getParameter("phone"));
+                doctor.setEmail(request.getParameter("email"));
+                doctor.setTitle(request.getParameter("title"));
+
+                // Handle Department ID
+                String deptStr = request.getParameter("departmentId");
+                if (deptStr != null && !deptStr.trim().isEmpty()) {
+                    try {
+                        doctor.setDepartmentId(Long.parseLong(deptStr));
+                    } catch (NumberFormatException e) {
+                        doctor.setDepartmentId(null);
+                    }
+                }
+
+                if (DoctorDB.update(doctor)) {
+                    request.setAttribute("success", "Profile updated successfully");
+                    request.getRequestDispatcher("/doctor/profile.jsp").forward(request, response);
+                } else {
+                    request.setAttribute("error", "Failed to update profile");
+                    request.getRequestDispatcher("/doctor/profile.jsp").forward(request, response);
+                }
             }
         } catch (Exception e) {
-            writeJson(response, 500, false, "Server error: " + e.getMessage(), result);
+            e.printStackTrace();
+            request.setAttribute("error", "Server error: " + e.getMessage());
         }
-    }
 
-    private void writeJson(HttpServletResponse response, int status, boolean success, String message, Map<String, Object> map) throws IOException {
-        response.setStatus(status);
-        map.put("success", success);
-        map.put("message", message);
-        response.getWriter().write(gson.toJson(map));
+        // Always redirect (best practice to prevent duplicate form submission)
+        response.sendRedirect(request.getContextPath() + "/doctor/profile");
     }
 }
