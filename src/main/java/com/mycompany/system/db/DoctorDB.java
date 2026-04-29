@@ -174,4 +174,31 @@ public class DoctorDB {
         return deleted;
     }
     
+    public static List<DoctorBean> search(String keyword) {
+        List<DoctorBean> list = new ArrayList<>();
+        String sql = "SELECT * FROM doctor WHERE "
+                   + "real_name LIKE ? OR username LIKE ? OR phone LIKE ? "
+                   + "OR email LIKE ? OR title LIKE ? ORDER BY id DESC";
+        
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            String like = "%" + keyword + "%";
+            ps.setString(1, like);
+            ps.setString(2, like);
+            ps.setString(3, like);
+            ps.setString(4, like);
+            ps.setString(5, like);
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRow(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+    
 }
