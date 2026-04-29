@@ -43,13 +43,8 @@ public class RegisterServlet extends HttpServlet {
         patient.setPhone(request.getParameter("phone"));
         patient.setGender(Integer.parseInt(request.getParameter("gender")));
         patient.setEmail(request.getParameter("email"));
-        patient.setIdCard(request.getParameter("id_card"));
-        String birthdayStr = request.getParameter("birthday");
-        if (birthdayStr != null && !birthdayStr.isEmpty()) {
-            patient.setBirthday(LocalDate.parse(birthdayStr));
-        } else {
-            patient.setBirthday(null);
-        }
+        patient.setIdCard(null);
+        patient.setBirthday(null);
         patient.setAddress(request.getParameter("address"));
 
         patient.setBalance(BigDecimal.ZERO);

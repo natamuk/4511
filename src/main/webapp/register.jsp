@@ -69,17 +69,6 @@
                        class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm">
             </div>
 
-            <div>
-                <label class="block text-sm font-medium text-gray-700">ID Card</label>
-                <input type="text" name="id_card"
-                       class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm">
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Birthday</label>
-                <input type="date" name="birthday"
-                       class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm">
-            </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700">Address</label>

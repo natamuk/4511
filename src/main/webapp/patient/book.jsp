@@ -64,8 +64,8 @@
                 </div>
             </div>
         </div>
-        <div class="p-6 flex-1 flex flex-col">
-            <div class="flex items-center gap-4 p-4 glass rounded-3xl mb-8">
+        <div class="p-6 flex-1 flex flex-col overflow-y-auto">
+            <div class="flex items-center gap-4 p-4 glass rounded-3xl mb-8 ">
                 <img class="w-14 h-14 rounded-2xl ring-4 ring-white object-cover" src="<%= avatar %>" alt="avatar">
                 <div>
                     <p class="font-semibold"><%= realName %></p>
