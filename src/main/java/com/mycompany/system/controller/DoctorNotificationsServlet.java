@@ -31,7 +31,7 @@ public class DoctorNotificationsServlet extends HttpServlet {
         // 获取取消预约记录（issue_type = 'Cancellation'）
         List<Map<String, Object>> cancellations = getIssuesByType(doctorId, "Cancellation");
         // 获取其他运营问题记录（issue_type != 'Cancellation'）
-        List<Map<String, Object>> operationalIssues = getIssuesByType(doctorId, null, true); // 排除 Cancellation
+        List<Map<String, Object>> operationalIssues = getOperationalIssues(doctorId); // 改用专用方法
 
         request.setAttribute("staffProfile", profile);
         request.setAttribute("notifications", notifications);
@@ -43,8 +43,10 @@ public class DoctorNotificationsServlet extends HttpServlet {
     // 获取指定类型的问题
     private List<Map<String, Object>> getIssuesByType(Long doctorId, String issueType) {
         List<Map<String, Object>> list = new ArrayList<>();
-        String sql = "SELECT id, issue_type AS type, detail, created_at FROM doctor_issue WHERE doctor_id = ? AND issue_type = ? ORDER BY created_at DESC";
-        try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        String sql = "SELECT id, issue_type AS type, detail, created_at FROM doctor_issue " +
+                     "WHERE doctor_id = ? AND issue_type = ? ORDER BY created_at DESC";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, doctorId);
             ps.setString(2, issueType);
             try (ResultSet rs = ps.executeQuery()) {
@@ -63,13 +65,14 @@ public class DoctorNotificationsServlet extends HttpServlet {
         return list;
     }
 
-    // 获取除了某类型之外的所有问题
-    private List<Map<String, Object>> getIssuesByType(Long doctorId, String excludeType, boolean exclude) {
+    // 获取运营问题（排除 Cancellation 类型）
+    private List<Map<String, Object>> getOperationalIssues(Long doctorId) {
         List<Map<String, Object>> list = new ArrayList<>();
-        String sql = "SELECT id, issue_type AS type, detail, created_at FROM doctor_issue WHERE doctor_id = ? AND issue_type != ? ORDER BY created_at DESC";
-        try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        String sql = "SELECT id, issue_type AS type, detail, created_at FROM doctor_issue " +
+                     "WHERE doctor_id = ? AND issue_type != 'Cancellation' ORDER BY created_at DESC";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, doctorId);
-            ps.setString(2, excludeType);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     Map<String, Object> row = new HashMap<>();

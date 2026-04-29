@@ -26,7 +26,7 @@ public class PatientSlotAvailabilityServlet extends HttpServlet {
 
         String clinicIdParam = request.getParameter("clinicId");
         String dateParam = request.getParameter("date");
-        if (clinicIdParam == null || dateParam == null) {
+        if (clinicIdParam == null || dateParam == null || clinicIdParam.trim().isEmpty() || dateParam.trim().isEmpty()) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             response.getWriter().write("{\"error\":\"Missing clinicId or date\"}");
             return;

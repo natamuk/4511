@@ -27,11 +27,11 @@ public class DoctorActionServlet extends HttpServlet {
         HttpSession session = request.getSession(false);
         LoginUser user = (session == null) ? null : (LoginUser) session.getAttribute("loginUser");
         if (user == null || !"doctor".equals(session.getAttribute("role"))) {
-            respondJson(response, false, "Unauthorized", HttpServletResponse.SC_UNAUTHORIZED);
+            respondJson(response, false, "Unauthorized", HttpServletResponse.SC_OK);  // 使用 200，前端通过 success 判断
             return;
         }
         if (action == null || id == null) {
-            respond(request, response, false, "Missing parameters", HttpServletResponse.SC_BAD_REQUEST);
+            respondJson(response, false, "Missing parameters", HttpServletResponse.SC_OK);
             return;
         }
 
@@ -45,10 +45,12 @@ public class DoctorActionServlet extends HttpServlet {
                     case "approve":
                         DoctorAppointmentService.approve(conn, id, user.getId());
                         success = true;
+                        message = "Appointment approved successfully";
                         break;
                     case "reject":
                         DoctorAppointmentService.reject(conn, id, user.getId(), reason);
                         success = true;
+                        message = "Appointment cancelled successfully";
                         break;
                     case "update":
                         if (statusParam == null) throw new IllegalArgumentException("Missing status");
@@ -59,6 +61,7 @@ public class DoctorActionServlet extends HttpServlet {
                             DoctorAppointmentService.updateStatus(conn, id, user.getId(), statusParam.intValue());
                         }
                         success = true;
+                        message = "Status updated successfully";
                         break;
                     case "skip":
                         if ("QUEUE".equalsIgnoreCase(sourceType)) {
@@ -67,10 +70,12 @@ public class DoctorActionServlet extends HttpServlet {
                             DoctorAppointmentService.skip(conn, id, user.getId());
                         }
                         success = true;
+                        message = "Skipped successfully";
                         break;
                     case "callnext":
                         DoctorCallNextService.callNext(conn, user.getId());
                         success = true;
+                        message = "Next patient called";
                         break;
                     default:
                         throw new IllegalArgumentException("Unknown action: " + action);
@@ -90,41 +95,29 @@ public class DoctorActionServlet extends HttpServlet {
             success = false;
         }
 
-        respondJson(response, success, message, success ? HttpServletResponse.SC_OK : HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        // 统一返回 HTTP 200，业务成功/失败由 JSON 中的 success 标志表示
+        respondJson(response, success, message, HttpServletResponse.SC_OK);
     }
 
-    private void respond(HttpServletRequest request, HttpServletResponse response, boolean success, String message, int successStatus) throws IOException {
-        String ajaxHeader = request.getHeader("X-Requested-With");
-        String accept = request.getHeader("Accept");
-        boolean wantsJson = (ajaxHeader != null && "XMLHttpRequest".equalsIgnoreCase(ajaxHeader))
-                || (accept != null && accept.contains("application/json"))
-                || "true".equalsIgnoreCase(request.getParameter("ajax"));
-
-        if (wantsJson) {
-            response.setContentType("application/json;charset=UTF-8");
-            response.setStatus(success ? successStatus : HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            Map<String, Object> r = new HashMap<>();
-            r.put("success", success);
-            if (!success) r.put("message", message == null ? "Operation failed" : message);
-            response.getWriter().write(gson.toJson(r));
-        } else {
-            HttpSession session = request.getSession(true);
-            if (success) session.setAttribute("flash_success", "Operation succeeded");
-            else session.setAttribute("flash_error", message == null ? "Operation failed" : message);
-            String referer = request.getHeader("Referer");
-            if (referer == null || referer.isBlank()) {
-                response.sendRedirect(request.getContextPath() + "/doctor/dashboard");
-            } else {
-                response.sendRedirect(referer);
-            }
+    private void respondJson(HttpServletResponse response, boolean success, String message, int statusCode) throws IOException {
+        // 关键：清除可能由错误页面或之前输出导致的内容
+        response.reset();
+        response.setContentType("application/json;charset=UTF-8");
+        response.setStatus(statusCode);
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", success);
+        if (message != null && !message.isEmpty()) {
+            result.put("message", message);
         }
+        response.getWriter().write(gson.toJson(result));
+        response.getWriter().flush();
     }
 
     private Long parseLong(String v) {
-        try { return v == null ? null : Long.parseLong(v); } catch (Exception e) { return null; }
-    }
-
-    private void respondJson(HttpServletResponse response, boolean b, String unauthorized, int SC_UNAUTHORIZED) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        try {
+            return v == null ? null : Long.parseLong(v);
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

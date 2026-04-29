@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.mycompany.system.dao;
 
 import com.mycompany.system.util.DBUtil;
@@ -33,37 +29,45 @@ public class PatientDashboardDao {
         }
         return profile;
     }
+    
+    
 
-    public List<Map<String, Object>> getUpcomingAppointments(Long patientId) {
-        String sql = "SELECT r.id, r.reg_no, r.reg_date, r.slot_time, r.queue_no, r.status, "
-                + "c.clinic_name AS clinicName, d.real_name AS doctorName "
-                + "FROM registration r "
-                + "JOIN clinic c ON r.clinic_id = c.id "
-                + "JOIN doctor d ON r.doctor_id = d.id "
-                + "WHERE r.patient_id = ? AND r.status IN (1,3,4,5) "
-                + "ORDER BY r.reg_date ASC, r.slot_time ASC";
-        List<Map<String, Object>> list = new ArrayList<>();
-        try (Connection conn = DBUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setLong(1, patientId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    Map<String, Object> row = new HashMap<>();
-                    row.put("id", rs.getLong("id"));
-                    row.put("regNo", rs.getString("reg_no"));
-                    row.put("regDate", rs.getDate("reg_date"));
-                    row.put("slotTime", rs.getString("slot_time"));      // 直接返回时间字符串如 "09:00"
-                    row.put("queueNo", rs.getInt("queue_no"));
-                    row.put("status", regStatusToText(rs.getInt("status")));
-                    row.put("clinicName", rs.getString("clinicName"));
-                    row.put("doctorName", rs.getString("doctorName"));
-                    list.add(row);
+    // 修改：回傳 clinic_id 並把 reg_date 格式化為 yyyy-MM-dd 字串，讓 JSP 可以直接使用
+   public List<Map<String, Object>> getUpcomingAppointments(Long patientId) {
+    List<Map<String, Object>> list = new ArrayList<>();
+    String sql = "SELECT r.id, r.reg_date AS regDate, r.slot_time AS slotTime, r.queue_no AS queueNo, " +
+                 "CASE r.status " +
+                 "  WHEN 1 THEN 'Booked' " +
+                 "  WHEN 2 THEN 'Cancelled' " +
+                 "  WHEN 5 THEN 'Completed' " +
+                 "  ELSE 'Other' " +
+                 "END AS status, " +
+                 "c.clinic_name AS clinicName, d.real_name AS doctorName, " +
+                 "r.clinic_id AS clinicId " +   // 关键：添加 clinicId
+                 "FROM registration r " +
+                 "JOIN clinic c ON r.clinic_id = c.id " +
+                 "LEFT JOIN doctor d ON r.doctor_id = d.id " +
+                 "WHERE r.patient_id = ? " +
+                 "ORDER BY r.reg_date DESC, r.slot_time ASC";
+    try (Connection conn = DBUtil.getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+        ps.setLong(1, patientId);
+        try (ResultSet rs = ps.executeQuery()) {
+            ResultSetMetaData meta = rs.getMetaData();
+            int colCount = meta.getColumnCount();
+            while (rs.next()) {
+                Map<String, Object> row = new HashMap<>();
+                for (int i = 1; i <= colCount; i++) {
+                    row.put(meta.getColumnLabel(i), rs.getObject(i));
                 }
+                list.add(row);
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
-        return list;
+    } catch (SQLException e) {
+        e.printStackTrace();
     }
+    return list;
+}
 
     public List<Map<String, Object>> getLatestNotices(Long patientId) {
         List<Map<String, Object>> list = new ArrayList<>();
@@ -226,7 +230,7 @@ public class PatientDashboardDao {
                     row.put("queueNo", rs.getString("queue_no"));
                     row.put("createdTime", rs.getTimestamp("created_time"));
                     row.put("status", rs.getString("status"));
-                    row.put("clinicName", rs.getString("clinic_name"));   
+                    row.put("clinicName", rs.getString("clinic_name"));
                     list.add(row);
                 }
             }
@@ -314,23 +318,23 @@ public class PatientDashboardDao {
     }
     
     private int countWaitingByClinic(Long clinicId) {
-    String sql = "SELECT COUNT(*) FROM queue WHERE clinic_id = ? AND status = 'waiting' AND DATE(created_time) = CURDATE()";
-    try (Connection conn = DBUtil.getConnection();
-         PreparedStatement ps = conn.prepareStatement(sql)) {
-        ps.setLong(1, clinicId);
-        try (ResultSet rs = ps.executeQuery()) {
-            if (rs.next()) {
-                return rs.getInt(1);
+        String sql = "SELECT COUNT(*) FROM queue WHERE clinic_id = ? AND status = 'waiting' AND DATE(created_time) = CURDATE()";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, clinicId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-    } catch (SQLException e) {
-        e.printStackTrace();
+        return 0;  
     }
-    return 0;  
-}
     
     public List<Map<String, Object>> getSlotAvailability(Long clinicId, String date) {
-    String sql = "SELECT cts.id, cts.period, cts.slot_time, cts.capacity, " +
+        String sql = "SELECT cts.id, cts.period, cts.slot_time, cts.capacity, " +
                  "COALESCE(COUNT(r.id), 0) AS booked_count, " +
                  "(cts.capacity - COALESCE(COUNT(r.id), 0)) AS available " +
                  "FROM clinic_time_slot cts " +
@@ -341,51 +345,51 @@ public class PatientDashboardDao {
                  "WHERE cts.clinic_id = ? AND cts.status = 1 " +
                  "GROUP BY cts.id " +
                  "ORDER BY FIELD(cts.period,'morning','afternoon','evening'), cts.slot_time";
-    List<Map<String, Object>> list = new ArrayList<>();
-    try (Connection conn = DBUtil.getConnection();
-         PreparedStatement ps = conn.prepareStatement(sql)) {
-        ps.setString(1, date);
-        ps.setLong(2, clinicId);
-        try (ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                Map<String, Object> slot = new HashMap<>();
-                slot.put("period", rs.getString("period"));
-                slot.put("slotTime", rs.getString("slot_time"));
-                slot.put("capacity", rs.getInt("capacity"));
-                slot.put("bookedCount", rs.getInt("booked_count"));
-                slot.put("available", rs.getInt("available"));
-                list.add(slot);
+        List<Map<String, Object>> list = new ArrayList<>();
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, date);
+            ps.setLong(2, clinicId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> slot = new HashMap<>();
+                    slot.put("period", rs.getString("period"));
+                    slot.put("slotTime", rs.getString("slot_time"));
+                    slot.put("capacity", rs.getInt("capacity"));
+                    slot.put("bookedCount", rs.getInt("booked_count"));
+                    slot.put("available", rs.getInt("available"));
+                    list.add(slot);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public List<Map<String, Object>> getAvailableWalkinClinics() {
+        List<Map<String, Object>> result = new ArrayList<>();
+        if (!isWalkinQueueEnabled()) {
+            return result;
+        }
+
+        Set<Long> allowedIds = getWalkinEnabledClinicIds();
+        if (allowedIds.isEmpty()) {
+            return result;
+        }
+
+        List<Map<String, Object>> allClinics = getClinics();
+        for (Map<String, Object> clinic : allClinics) {
+            Long id = (Long) clinic.get("id");
+            if (allowedIds.contains(id)) {
+                Map<String, Object> availableClinic = new HashMap<>();
+                availableClinic.put("id", id);
+                availableClinic.put("name", clinic.get("name"));
+                availableClinic.put("location", clinic.get("location"));
+                availableClinic.put("waitingCount", countWaitingByClinic(id));
+                result.add(availableClinic);
             }
         }
-    } catch (Exception e) {
-        e.printStackTrace();
-    }
-    return list;
-}
-
-public List<Map<String, Object>> getAvailableWalkinClinics() {
-    List<Map<String, Object>> result = new ArrayList<>();
-    if (!isWalkinQueueEnabled()) {
         return result;
     }
-
-    Set<Long> allowedIds = getWalkinEnabledClinicIds();
-    if (allowedIds.isEmpty()) {
-        return result;
-    }
-
-    List<Map<String, Object>> allClinics = getClinics();
-    for (Map<String, Object> clinic : allClinics) {
-        Long id = (Long) clinic.get("id");
-        if (allowedIds.contains(id)) {
-            Map<String, Object> availableClinic = new HashMap<>();
-            availableClinic.put("id", id);
-            availableClinic.put("name", clinic.get("name"));
-            availableClinic.put("location", clinic.get("location"));
-            availableClinic.put("waitingCount", countWaitingByClinic(id)); // 加上等待人數
-            result.add(availableClinic);
-        }
-    }
-    return result;
-}
 }
