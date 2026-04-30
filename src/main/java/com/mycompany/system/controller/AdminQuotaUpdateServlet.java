@@ -3,7 +3,6 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 /*
- * AdminQuotaUpdateServlet.java - 完整版
  */
 package com.mycompany.system.controller;
 
@@ -25,7 +24,6 @@ public class AdminQuotaUpdateServlet extends HttpServlet {
         response.setContentType("application/json;charset=UTF-8");
         Map<String, Object> result = new HashMap<>();
 
-        // === 權限檢查（必須要有！）===
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("loginUser") == null ||
                 !"admin".equals(session.getAttribute("role"))) {
@@ -58,19 +56,19 @@ public class AdminQuotaUpdateServlet extends HttpServlet {
             if (success) {
                 response.setStatus(HttpServletResponse.SC_OK);
                 result.put("success", true);
-                result.put("message", "配額更新成功");
+                result.put("message", "Allocation updated successfully");
             } else {
                 result.put("success", false);
-                result.put("message", "更新失敗或配額不存在");
+                result.put("message", "Update failed or quota does not exist.");
             }
         } catch (NumberFormatException e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             result.put("success", false);
-            result.put("message", "ID 或容量格式錯誤");
+            result.put("message", "ID or capacity format error");
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             result.put("success", false);
-            result.put("message", "伺服器錯誤: " + e.getMessage());
+            result.put("message", "Server error: " + e.getMessage());
             e.printStackTrace();
         }
 

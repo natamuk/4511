@@ -42,7 +42,6 @@ public class DoctorDashboardServlet extends HttpServlet {
         request.getRequestDispatcher("/doctor/dashboard.jsp").forward(request, response);
     }
 
-    // ================== 公共方法，其他 Servlet 可复用 ==================
     protected Map<String, Object> getStaffProfile(Long doctorId) {
         String sql = "SELECT d.id, d.username, d.real_name, d.title, d.avatar, d.department_id, dept.dept_name " +
                 "FROM doctor d JOIN department dept ON d.department_id = dept.id WHERE d.id = ?";
@@ -94,11 +93,9 @@ public class DoctorDashboardServlet extends HttpServlet {
 
     protected List<Map<String, Object>> getQueueList(Long doctorId, int limit) {
         List<Map<String, Object>> list = new ArrayList<>();
-        // 1. 从预约表获取状态为 1,3,4 的记录
         String regSql = "SELECT r.id, r.reg_no AS ticket_no, p.real_name AS patient_name, dep.dept_name AS service, r.status, r.queue_no, 'REG' AS source " +
                 "FROM registration r JOIN patient p ON r.patient_id = p.id JOIN department dep ON r.department_id = dep.id " +
                 "WHERE r.doctor_id = ? AND r.status IN (1,3,4) AND r.reg_date = CURDATE() ORDER BY r.queue_no ASC";
-        // 2. 从排队表获取状态为 waiting, called 的记录
         String queueSql = "SELECT q.id, q.queue_no AS ticket_no, p.real_name AS patient_name, c.clinic_name AS service, " +
                 "CASE q.status WHEN 'waiting' THEN 1 WHEN 'called' THEN 3 ELSE 1 END AS status, q.queue_no, 'QUEUE' AS source " +
                 "FROM queue q JOIN patient p ON q.patient_id = p.id JOIN clinic c ON q.clinic_id = c.id " +
@@ -139,7 +136,6 @@ public class DoctorDashboardServlet extends HttpServlet {
                 }
             }
         } catch (Exception e) { e.printStackTrace(); }
-        // 排序：先按状态码 1(等待) -> 3(叫号) -> 4(就诊)，再按排队号排序
         list.sort((a, b) -> {
             int ca = (int) a.get("statusCode");
             int cb = (int) b.get("statusCode");

@@ -30,7 +30,6 @@ public class DoctorActionServlet extends HttpServlet {
             return;
         }
 
-        // 参数校验
         if (action == null || action.trim().isEmpty()) {
             respondJson(response, false, "Missing action parameter", HttpServletResponse.SC_OK);
             return;

@@ -20,7 +20,6 @@ public class AdminClinicAddServlet extends HttpServlet {
         response.setContentType("application/json;charset=UTF-8");
         Map<String, Object> result = new HashMap<>();
 
-        // 权限检查
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("loginUser") == null
                 || !"admin".equals(session.getAttribute("role"))) {
@@ -44,7 +43,7 @@ public class AdminClinicAddServlet extends HttpServlet {
         ClinicBean clinic = new ClinicBean();
         clinic.setClinicName(name.trim());
         clinic.setLocation(location != null ? location.trim() : "");
-        clinic.setStatus(1); // 默认启用
+        clinic.setStatus(1); 
         clinic.setSortNum(0);
 
         boolean success = ClinicDB.insert(clinic);

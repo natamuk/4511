@@ -70,7 +70,6 @@
         </div>
     </div>
 
-    <!-- Main content -->
     <div class="flex-1 flex flex-col min-w-0">
         <header class="glass border-b px-8 py-4 flex justify-between items-center z-10">
             <div><h2 class="text-2xl font-semibold">Home</h2><p class="text-sm text-gray-500 mt-1">Clinic overview for today</p></div>
@@ -83,7 +82,6 @@
                     <p class="text-gray-500 text-lg" id="today-date"></p>
                 </div>
 
-                <!-- Three quick cards -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <div class="home-card glass rounded-3xl p-8 border border-white/70 relative overflow-hidden">
                         <div class="absolute top-0 right-0 w-24 h-24 bg-blue-100 rounded-full -mr-8 -mt-8 opacity-50"></div>
@@ -122,7 +120,6 @@
                     </div>
                 </div>
 
-                <!-- Walk-in Queue Block with estimated time -->
                 <div class="glass rounded-3xl p-8">
                     <div class="flex items-center justify-between mb-4">
                         <h2 class="text-2xl font-bold text-gray-800">Walk-in Queue</h2>

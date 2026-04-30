@@ -30,16 +30,12 @@ public class DoctorProfileServlet extends HttpServlet {
         LoginUser loginUser = (LoginUser) session.getAttribute("loginUser");
         Long doctorId = loginUser.getId();
 
-        // 获取医生完整资料（复用 Dashboard 中的方法或直接查询）
         Map<String, Object> staffProfile = getStaffProfile(doctorId);
 
         request.setAttribute("staffProfile", staffProfile);
         request.getRequestDispatcher("/doctor/profile.jsp").forward(request, response);
     }
 
-    /**
-     * 从数据库获取医生的完整资料（包括姓名、职称、科室、电话、邮箱等）
-     */
     private Map<String, Object> getStaffProfile(Long doctorId) {
         String sql = "SELECT d.id, d.username, d.real_name, d.phone, d.email, d.title, d.avatar, " +
                      "d.department_id, dept.dept_name AS department_name " +

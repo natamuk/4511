@@ -66,7 +66,6 @@
         </div>
     </div>
 
-    <!-- Main content -->
     <div class="flex-1 flex flex-col min-w-0">
         <header class="glass border-b px-8 py-4 flex justify-between items-center z-10">
             <div><h2 class="text-2xl font-semibold">Join Queue</h2><p class="text-sm text-gray-500 mt-1">Walk-in waiting</p></div>
@@ -99,7 +98,6 @@
                         </div>
                     </div>
 
-                    <!-- My Queue with estimated time -->
                     <h2 class="text-3xl font-bold mb-4">My Queue</h2>
                     <div id="queue-container" class="space-y-4">
                         <% if (queueTickets.isEmpty()) { %>

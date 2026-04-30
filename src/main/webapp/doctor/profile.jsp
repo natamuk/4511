@@ -1,4 +1,3 @@
-<%-- doctor/profile.jsp --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="com.mycompany.system.model.LoginUser" %>
 <%@ page import="com.mycompany.system.bean.DoctorBean" %>
@@ -12,7 +11,6 @@
         return;
     }
 
-    // Load Doctor Bean
     DoctorBean doctor = DoctorDB.getById(loginUser.getId());
     request.setAttribute("doctor", doctor);
 
@@ -148,7 +146,6 @@
         <div class="content">
             <div class="max-w-2xl mx-auto bg-white rounded-3xl shadow p-10">
 
-                <!-- Success / Error Messages -->
                 <% if (request.getAttribute("success") != null) { %>
                     <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-2xl mb-6">
                         <%= request.getAttribute("success") %>
@@ -204,7 +201,6 @@
 
                 <hr class="my-10">
 
-                <!-- Change Password -->
                 <h3 class="text-xl font-bold mb-6">Change Password</h3>
                 <form action="<%= ctx %>/doctor/update-profile" method="post">
                     <input type="hidden" name="action" value="changePassword">
@@ -234,7 +230,6 @@
 </div>
 
 <script>
-    // Password confirmation
     document.querySelector('form[action*="changePassword"]').addEventListener('submit', function (e) {
         if (document.getElementById('newPwd').value !== document.getElementById('confirmPwd').value) {
             e.preventDefault();

@@ -23,7 +23,7 @@ public class PatientRescheduleBookingServlet extends HttpServlet {
         Long patientId = loginUser.getId();
         Long regId = parseLong(request.getParameter("registrationId"));
         String newDate = request.getParameter("newDate");
-        String newTime = request.getParameter("newTime");   // 注意参数名 newTime
+        String newTime = request.getParameter("newTime");   
 
         if (regId == null || newDate == null || newTime == null) {
             writeJson(response, 400, false, "Missing parameters");
@@ -39,7 +39,6 @@ public class PatientRescheduleBookingServlet extends HttpServlet {
         try (Connection conn = DBUtil.getConnection()) {
             conn.setAutoCommit(false);
 
-            // 获取原预约信息
             Long oldScheduleId, doctorId, clinicId;
             try (PreparedStatement ps = conn.prepareStatement(
                     "SELECT r.schedule_id, r.doctor_id, s.clinic_id FROM registration r " +
@@ -59,7 +58,6 @@ public class PatientRescheduleBookingServlet extends HttpServlet {
                 }
             }
 
-            // 检查新时段容量 (基于 clinic_time_slot 和 registration)
             String checkCapacitySql = "SELECT cts.capacity, " +
                     "(SELECT COUNT(*) FROM registration r WHERE r.clinic_id = ? AND r.reg_date = ? AND r.slot_time = ? AND r.status NOT IN (2,6)) AS booked_count " +
                     "FROM clinic_time_slot cts " +
@@ -87,7 +85,6 @@ public class PatientRescheduleBookingServlet extends HttpServlet {
                 return;
             }
 
-            // 查找新的 schedule_id
             Long newScheduleId = null;
             try (PreparedStatement ps = conn.prepareStatement(
                     "SELECT id FROM schedule WHERE doctor_id = ? AND schedule_date = ? AND time_slot = ? AND clinic_id = ? AND status = 1 AND booked_count < max_count LIMIT 1 FOR UPDATE")) {
@@ -106,7 +103,6 @@ public class PatientRescheduleBookingServlet extends HttpServlet {
                 }
             }
 
-            // 更新新旧 schedule 的 booked_count
             try (PreparedStatement ps = conn.prepareStatement("UPDATE schedule SET booked_count = booked_count - 1 WHERE id = ?")) {
                 ps.setLong(1, oldScheduleId);
                 ps.executeUpdate();
@@ -116,7 +112,6 @@ public class PatientRescheduleBookingServlet extends HttpServlet {
                 ps.executeUpdate();
             }
 
-            // 生成新的排队号（基于新 schedule 和新日期）
             int newQueueNo = 1;
             try (PreparedStatement ps = conn.prepareStatement("SELECT COALESCE(MAX(queue_no), 0) + 1 FROM registration WHERE reg_date = ? AND schedule_id = ?")) {
                 ps.setString(1, newDate);
@@ -126,7 +121,6 @@ public class PatientRescheduleBookingServlet extends HttpServlet {
                 }
             }
 
-            // 更新预约记录
             try (PreparedStatement ps = conn.prepareStatement(
                     "UPDATE registration SET schedule_id = ?, reg_date = ?, slot_time = ?, queue_no = ?, update_time = NOW() WHERE id = ?")) {
                 ps.setLong(1, newScheduleId);

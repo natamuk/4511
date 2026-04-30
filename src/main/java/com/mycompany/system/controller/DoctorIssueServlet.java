@@ -39,7 +39,6 @@ public class DoctorIssueServlet extends HttpServlet {
             return;
         }
 
-        // 如果前端未传 issueType，默认为 "Manual Report"
         if (issueType == null || issueType.trim().isEmpty()) {
             issueType = "Manual Report";
         }

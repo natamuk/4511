@@ -26,7 +26,6 @@ public class DoctorIssuesServlet extends HttpServlet {
         Map<String, Object> profile = dash.getStaffProfile(doctorId);
 
         request.setAttribute("staffProfile", profile);
-        // 不再传递 issues 列表，issues.jsp 只显示报告表单
         request.getRequestDispatcher("/doctor/issues.jsp").forward(request, response);
     }
 }

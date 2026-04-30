@@ -24,7 +24,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        /* 样式与之前相同，略... 保持原有样式 */
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap');
         * { box-sizing: border-box; }
         body {
@@ -123,7 +122,6 @@
                     </ul>
                 </div>
 
-                <!-- 2. 取消预约历史（专门显示取消原因） -->
                 <div class="card">
                     <h2 class="text-2xl font-bold mb-4"><i class="fa-solid fa-calendar-xmark mr-2 text-red-500"></i>Cancellation History</h2>
                     <div class="overflow-x-auto">
@@ -149,7 +147,6 @@
                     </div>
                 </div>
 
-                <!-- 3. 运营问题报告（除取消外的其他问题） -->
                 <div class="card">
                     <h2 class="text-2xl font-bold mb-4"><i class="fa-solid fa-triangle-exclamation mr-2 text-orange-500"></i>Operational Issues</h2>
                     <div class="overflow-x-auto">
@@ -179,7 +176,6 @@
     </div>
 </div>
 
-<!-- 报告运营问题模态框（同前） -->
 <div id="issueModal" class="modal-mask">
     <div class="modal-container">
         <div class="flex justify-between items-center mb-4">

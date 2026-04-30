@@ -32,7 +32,6 @@ public class PatientDashboardDao {
     
     
 
-    // 修改：回傳 clinic_id 並把 reg_date 格式化為 yyyy-MM-dd 字串，讓 JSP 可以直接使用
    public List<Map<String, Object>> getUpcomingAppointments(Long patientId) {
     List<Map<String, Object>> list = new ArrayList<>();
     String sql = "SELECT r.id, r.reg_date AS regDate, r.slot_time AS slotTime, r.queue_no AS queueNo, " +
@@ -43,7 +42,7 @@ public class PatientDashboardDao {
                  "  ELSE 'Other' " +
                  "END AS status, " +
                  "c.clinic_name AS clinicName, d.real_name AS doctorName, " +
-                 "r.clinic_id AS clinicId " +   // 关键：添加 clinicId
+                 "r.clinic_id AS clinicId " +   
                  "FROM registration r " +
                  "JOIN clinic c ON r.clinic_id = c.id " +
                  "LEFT JOIN doctor d ON r.doctor_id = d.id " +
@@ -393,7 +392,6 @@ public class PatientDashboardDao {
         return result;
     }
     
-        // 获取最大活跃预约数限制（来自 system_setting 表）
     public int getMaxActiveBookingsPerPatient() {
         Map<String, String> settings = getSettings();
         String val = settings.getOrDefault("max_active_bookings_per_patient", "3");
@@ -404,7 +402,6 @@ public class PatientDashboardDao {
         }
     }
 
-    // 获取取消截止小时数（来自 system_setting 表）
     public int getCancelDeadlineHours() {
         Map<String, String> settings = getSettings();
         String val = settings.getOrDefault("cancel_deadline_hours", "24");

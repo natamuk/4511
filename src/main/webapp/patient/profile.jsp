@@ -12,7 +12,6 @@
         return;
     }
 
-    // Load Patient Bean
     PatientBean patient = PatientDB.getById(loginUser.getId());
 
     String ctx = request.getContextPath();
@@ -186,7 +185,6 @@
 
                         <hr class="my-10">
 
-                        <!-- Change Password -->
                         <h3 class="text-xl font-bold mb-6">Change Password</h3>
                         <form action="<%= ctx%>/patient/update-profile" method="post">
                             <input type="hidden" name="action" value="changePassword">
@@ -216,7 +214,6 @@
         </div>
 
         <script>
-            // Password confirmation
             document.querySelector('form[action*="changePassword"]').addEventListener('submit', function (e) {
                 if (document.getElementById('newPwd').value !== document.getElementById('confirmPwd').value) {
                     e.preventDefault();

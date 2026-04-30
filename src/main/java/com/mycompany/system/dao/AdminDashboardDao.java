@@ -165,7 +165,6 @@ public class AdminDashboardDao {
     public List<Map<String, Object>> getIssues() {
         List<Map<String, Object>> list = new ArrayList<>();
 
-        // 1) 先從 doctor_issue 讀
         String sql1 =
                 "SELECT di.id, di.doctor_id, di.issue_type, di.clinic_name, di.detail, di.status, di.created_at, d.real_name AS doctor_name " +
                 "FROM doctor_issue di " +
@@ -192,7 +191,6 @@ public class AdminDashboardDao {
             e.printStackTrace();
         }
 
-        // 2) 補一份從 registration 推導的異常資料：頻繁取消
         String sql2 =
                 "SELECT p.id AS patient_id, p.real_name AS patient_name, " +
                 "SUM(CASE WHEN r.status = 2 THEN 1 ELSE 0 END) AS cancelled_count, " +
@@ -223,7 +221,6 @@ public class AdminDashboardDao {
             e.printStackTrace();
         }
 
-        // 3) 補一份從 registration 推導的異常資料：頻繁預約但未完成（簡單統計）
         String sql3 =
                 "SELECT p.id AS patient_id, p.real_name AS patient_name, " +
                 "COUNT(*) AS total_count, MAX(r.update_time) AS last_update " +
@@ -527,23 +524,13 @@ public class AdminDashboardDao {
             return false;
         }
     }
-
-    // ==================== 新增加的方法（用于 AdminQueueServlet） ====================
-
-    /**
-     * 检查是否启用现场挂号（同天排队）功能
-     * 读取系统设置 same_day_queue_enabled，默认为 "1" 表示启用
-     */
+    
     public boolean isWalkinQueueEnabled() {
         Map<String, String> settings = getSettings();
         String value = settings.getOrDefault("same_day_queue_enabled", "1");
         return "1".equals(value) || "true".equalsIgnoreCase(value);
     }
 
-    /**
-     * 获取可用于现场挂号的诊所列表
-     * 返回所有 status = 1 的诊所（可根据业务需要增加其他条件）
-     */
     public List<Map<String, Object>> getAvailableWalkinClinics() {
         String sql = "SELECT id, clinic_name, location, description, status FROM clinic WHERE status = 1 ORDER BY sort_num ASC";
         List<Map<String, Object>> list = new ArrayList<>();
@@ -564,8 +551,6 @@ public class AdminDashboardDao {
         }
         return list;
     }
-
-    // ==================== 保持原有的辅助方法 ====================
 
     private String statusToText(int status) {
         switch (status) {
@@ -598,8 +583,6 @@ public class AdminDashboardDao {
             default: return "unknown";
         }
     }
-
-    // ==================== 诊所管理、配额更新、用户更新、预约改期等 ====================
 
     public boolean createClinic(String name, String address, String phone) {
         String sql = "INSERT INTO clinic (clinic_name, location, description, status, create_time) VALUES (?, ?, ?, 1, NOW())";

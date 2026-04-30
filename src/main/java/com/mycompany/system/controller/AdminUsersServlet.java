@@ -21,7 +21,6 @@ public class AdminUsersServlet extends HttpServlet {
         AdminDashboardDao dao = new AdminDashboardDao();
         request.setAttribute("doctorUsers", dao.getDoctors());
         request.setAttribute("patientUsers", dao.getPatients());
-        // 如果需要 admin 列表，请在 DAO 中实现 getAdminUsers()，此处暂不添加
         request.getRequestDispatcher("/admin/users.jsp").forward(request, response);
     }
 }

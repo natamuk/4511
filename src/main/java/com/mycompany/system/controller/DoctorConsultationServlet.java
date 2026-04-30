@@ -31,8 +31,8 @@ public class DoctorConsultationServlet extends HttpServlet {
             return;
         }
 
-        Long id = parseLong(request.getParameter("regId"));       // 可能是 registration.id 或 queue.id
-        String source = request.getParameter("source");          // "REG" 或 "QUEUE"
+        Long id = parseLong(request.getParameter("regId"));     
+        String source = request.getParameter("source");         
         String diagnosis = request.getParameter("diagnosis");
         String prescription = request.getParameter("prescription");
         String advice = request.getParameter("advice");
@@ -44,7 +44,6 @@ public class DoctorConsultationServlet extends HttpServlet {
             return;
         }
 
-        // 默认 source 为 REG（兼容旧请求）
         if (source == null) source = "REG";
 
         try (Connection conn = DBUtil.getConnection()) {
@@ -56,21 +55,17 @@ public class DoctorConsultationServlet extends HttpServlet {
 
                 if ("REG".equalsIgnoreCase(source)) {
                     registrationId = id;
-                    // 从 registration 获取 patient_id
                     patientId = getPatientIdByRegistration(conn, registrationId);
                     if (patientId == null) throw new Exception("Registration not found");
                 } else if ("QUEUE".equalsIgnoreCase(source)) {
-                    // 从 queue 表获取 patient_id，同时尝试找到关联的 registration
                     patientId = getPatientIdByQueue(conn, id);
                     if (patientId == null) throw new Exception("Queue record not found");
 
-                    // 尝试查找该患者今天是否有对应的预约（同一科室/医生）, 如果没有则创建临时 registration
                     registrationId = findOrCreateRegistrationForQueue(conn, patientId, doctorId, id);
                 } else {
                     throw new Exception("Unknown source type: " + source);
                 }
 
-                // 插入 consultation 记录
                 try (PreparedStatement ps = conn.prepareStatement(
                         "INSERT INTO consultation (registration_id, patient_id, doctor_id, diagnosis, medical_advice, prescription, consultation_time, status) " +
                                 "VALUES (?, ?, ?, ?, ?, ?, NOW(), 2)")) {
@@ -83,7 +78,6 @@ public class DoctorConsultationServlet extends HttpServlet {
                     ps.executeUpdate();
                 }
 
-                // 更新原记录状态为已完成 (status 5)
                 if ("REG".equalsIgnoreCase(source)) {
                     try (PreparedStatement ps = conn.prepareStatement(
                             "UPDATE registration SET status = 5, update_time = NOW() WHERE id = ? AND doctor_id = ?")) {
@@ -99,7 +93,6 @@ public class DoctorConsultationServlet extends HttpServlet {
                     }
                 }
 
-                // 发送通知给患者
                 try (PreparedStatement ps = conn.prepareStatement(
                         "INSERT INTO user_notification (user_id, user_type, title, message, type, is_read, create_time) " +
                                 "VALUES (?, 3, ?, ?, 'success', 0, NOW())")) {
@@ -125,7 +118,6 @@ public class DoctorConsultationServlet extends HttpServlet {
         response.getWriter().write(gson.toJson(result));
     }
 
-    // ========== 辅助方法 ==========
     private Long getPatientIdByRegistration(Connection conn, Long registrationId) throws Exception {
         String sql = "SELECT patient_id FROM registration WHERE id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -149,7 +141,6 @@ public class DoctorConsultationServlet extends HttpServlet {
     }
 
     private Long findOrCreateRegistrationForQueue(Connection conn, Long patientId, Long doctorId, Long queueId) throws Exception {
-        // 先查找今天是否有此医生、患者的未完成预约
         String findSql = "SELECT id FROM registration WHERE patient_id = ? AND doctor_id = ? AND reg_date = CURDATE() AND status IN (1,3,4) LIMIT 1";
         try (PreparedStatement ps = conn.prepareStatement(findSql)) {
             ps.setLong(1, patientId);
@@ -159,7 +150,6 @@ public class DoctorConsultationServlet extends HttpServlet {
             }
         }
 
-        // 如果没有，创建一个简单的 registration 记录（用于病历关联）
         String insertSql = "INSERT INTO registration (reg_no, patient_id, doctor_id, department_id, schedule_id, reg_date, queue_no, fee, status, create_time, update_time) " +
                 "VALUES (?, ?, ?, (SELECT department_id FROM doctor WHERE id = ?), NULL, CURDATE(), 0, 0.00, 5, NOW(), NOW())";
         String regNo = "QR-" + System.currentTimeMillis();

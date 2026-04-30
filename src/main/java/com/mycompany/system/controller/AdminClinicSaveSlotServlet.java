@@ -17,7 +17,6 @@ public class AdminClinicSaveSlotServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // 由于前端是普通表单提交（非 fetch），这里直接重定向并带消息
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("loginUser") == null
                 || !"admin".equals(session.getAttribute("role"))) {

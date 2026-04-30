@@ -46,7 +46,6 @@ public class PatientRescheduleServlet extends HttpServlet {
         }
 
         try (Connection conn = DBUtil.getConnection()) {
-            // 1. 验证预约属于当前用户且状态为 Booked
             String checkSql = "SELECT clinic_id, doctor_id, department_id, status FROM registration WHERE id = ? AND patient_id = ?";
             Long clinicId = null;
             int status = 0;
@@ -72,7 +71,6 @@ public class PatientRescheduleServlet extends HttpServlet {
                 return;
             }
 
-            // 2. 检查新时段是否有效且有剩余容量
             String checkSlotSql = "SELECT cts.capacity, COUNT(r.id) AS booked FROM clinic_time_slot cts " +
                     "LEFT JOIN registration r ON cts.clinic_id = r.clinic_id AND cts.slot_time = r.slot_time AND r.reg_date = ? " +
                     "AND r.status NOT IN (2,6) " +
@@ -102,7 +100,6 @@ public class PatientRescheduleServlet extends HttpServlet {
                 return;
             }
 
-            // 3. 更新预约日期和时段
             String updateSql = "UPDATE registration SET reg_date = ?, slot_time = ?, update_time = NOW() WHERE id = ?";
             try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
                 ps.setString(1, newDate);

@@ -11,9 +11,6 @@ import java.util.Map;
 
 @WebServlet("/doctor/checkin-page")
 public class DoctorCheckinPageServlet extends HttpServlet {
-    // 注意：原来的 @WebServlet("/doctor/checkin") 用于POST签到，所以此页面映射到 /doctor/checkin-page
-    // 但在原 JSP 中，您需要修改链接为 /doctor/checkin-page。若想直接使用 /doctor/checkin 作为 GET，
-    // 请删除原 DoctorCheckinServlet 或修改其注解。
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

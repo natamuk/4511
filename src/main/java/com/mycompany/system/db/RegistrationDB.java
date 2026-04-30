@@ -8,7 +8,6 @@ import java.util.List;
 
 public class RegistrationDB {
 
-    // 根据 ID 查询预约
     public static RegistrationBean getById(Long id) {
         String sql = "SELECT id, reg_no, patient_id, clinic_id, doctor_id, department_id, schedule_id, " +
                      "reg_date, slot_time, queue_no, fee, status, cancel_time, cancel_reason, call_time, " +
@@ -27,7 +26,6 @@ public class RegistrationDB {
         return null;
     }
 
-    // 根据患者 ID 查询所有预约
     public static List<RegistrationBean> listByPatientId(Long patientId) {
         List<RegistrationBean> list = new ArrayList<>();
         String sql = "SELECT id, reg_no, patient_id, clinic_id, doctor_id, department_id, schedule_id, " +
@@ -47,7 +45,6 @@ public class RegistrationDB {
         return list;
     }
 
-    // 取消预约（更新状态为 2，记录取消时间）
     public static boolean cancelBooking(Long registrationId, Long scheduleId) {
         String sql = "UPDATE registration SET status = 2, cancel_time = NOW(), update_time = NOW() WHERE id = ?";
         try (Connection conn = DBUtil.getConnection();
@@ -55,7 +52,6 @@ public class RegistrationDB {
             ps.setLong(1, registrationId);
             int rows = ps.executeUpdate();
             if (rows > 0 && scheduleId != null) {
-                // 减少 schedule 的预约计数
                 String updateSchedule = "UPDATE schedule SET booked_count = booked_count - 1 WHERE id = ? AND booked_count > 0";
                 try (PreparedStatement ps2 = conn.prepareStatement(updateSchedule)) {
                     ps2.setLong(1, scheduleId);
@@ -69,7 +65,6 @@ public class RegistrationDB {
         }
     }
 
-    // 更新预约（一般用于改时间，这里保留简单更新）
     public static boolean updateRegistration(RegistrationBean reg) {
         String sql = "UPDATE registration SET reg_date = ?, slot_time = ?, update_time = NOW() WHERE id = ?";
         try (Connection conn = DBUtil.getConnection();
@@ -84,7 +79,6 @@ public class RegistrationDB {
         }
     }
 
-    // 新增预约
     public static boolean insertRegistration(RegistrationBean reg) {
         String sql = "INSERT INTO registration (reg_no, patient_id, clinic_id, doctor_id, department_id, schedule_id, " +
                      "reg_date, slot_time, queue_no, fee, status, create_time, update_time) " +
@@ -117,7 +111,6 @@ public class RegistrationDB {
         return false;
     }
 
-    // 结果集映射
     private static RegistrationBean mapRow(ResultSet rs) throws SQLException {
         RegistrationBean reg = new RegistrationBean();
         reg.setId(rs.getLong("id"));
