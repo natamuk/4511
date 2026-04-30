@@ -47,8 +47,7 @@ public class PatientCancelBookingServlet extends HttpServlet {
             if (isAjax) {
                 writeJson(response, false, "Please login first");
             } else {
-                request.setAttribute("error", "Please login first");
-                forwardToMyAppointments(request, response);
+                redirectToMyAppointmentsWithMessage(request, response, "error", "Please login first");
             }
             return;
         }
@@ -61,8 +60,7 @@ public class PatientCancelBookingServlet extends HttpServlet {
             if (isAjax) {
                 writeJson(response, false, "Missing registration ID");
             } else {
-                request.setAttribute("error", "Missing registration ID");
-                forwardToMyAppointments(request, response);
+                redirectToMyAppointmentsWithMessage(request, response, "error", "Missing registration ID");
             }
             return;
         }
@@ -73,8 +71,7 @@ public class PatientCancelBookingServlet extends HttpServlet {
                 if (isAjax) {
                     writeJson(response, false, "Booking not found or not yours");
                 } else {
-                    request.setAttribute("error", "Booking not found or not yours");
-                    forwardToMyAppointments(request, response);
+                    redirectToMyAppointmentsWithMessage(request, response, "error", "Booking not found or not yours");
                 }
                 return;
             }
@@ -83,8 +80,7 @@ public class PatientCancelBookingServlet extends HttpServlet {
                 if (isAjax) {
                     writeJson(response, false, "Only booked appointments can be cancelled");
                 } else {
-                    request.setAttribute("error", "Only booked appointments can be cancelled");
-                    forwardToMyAppointments(request, response);
+                    redirectToMyAppointmentsWithMessage(request, response, "error", "Only booked appointments can be cancelled");
                 }
                 return;
             }
@@ -99,8 +95,7 @@ public class PatientCancelBookingServlet extends HttpServlet {
                 if (isAjax) {
                     writeJson(response, false, errorMsg);
                 } else {
-                    request.setAttribute("error", errorMsg);
-                    forwardToMyAppointments(request, response);
+                    redirectToMyAppointmentsWithMessage(request, response, "error", errorMsg);
                 }
                 return;
             }
@@ -119,15 +114,13 @@ public class PatientCancelBookingServlet extends HttpServlet {
                 if (isAjax) {
                     writeJson(response, true, "Booking cancelled successfully");
                 } else {
-                    request.setAttribute("success", "Booking cancelled successfully");
-                    forwardToMyAppointments(request, response);
+                    redirectToMyAppointmentsWithMessage(request, response, "success", "Booking cancelled successfully");
                 }
             } else {
                 if (isAjax) {
                     writeJson(response, false, "Failed to cancel booking");
                 } else {
-                    request.setAttribute("error", "Failed to cancel booking");
-                    forwardToMyAppointments(request, response);
+                    redirectToMyAppointmentsWithMessage(request, response, "error", "Failed to cancel booking");
                 }
             }
 
@@ -136,15 +129,14 @@ public class PatientCancelBookingServlet extends HttpServlet {
             if (isAjax) {
                 writeJson(response, false, "Server error occurred");
             } else {
-                request.setAttribute("error", "Server error occurred");
-                forwardToMyAppointments(request, response);
+                redirectToMyAppointmentsWithMessage(request, response, "error", "Server error occurred");
             }
         }
     }
 
     private Timestamp getAppointmentDateTime(java.sql.Date regDate, String slotTime) {
         if (regDate == null || slotTime == null || slotTime.trim().isEmpty()) {
-            return new Timestamp(System.currentTimeMillis()); // fallback, should not happen
+            return new Timestamp(System.currentTimeMillis());
         }
         String time = slotTime.trim();
         if (time.length() == 5 && time.indexOf(':') == 2) {
@@ -154,9 +146,15 @@ public class PatientCancelBookingServlet extends HttpServlet {
         return Timestamp.valueOf(dateTimeStr);
     }
 
-    private void forwardToMyAppointments(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        request.getRequestDispatcher("/patient/myappointments").forward(request, response);
+    private void redirectToMyAppointmentsWithMessage(HttpServletRequest request, HttpServletResponse response, String type, String message)
+            throws IOException {
+        HttpSession session = request.getSession();
+        if ("success".equals(type)) {
+            session.setAttribute("successMsg", message);
+        } else {
+            session.setAttribute("errorMsg", message);
+        }
+        response.sendRedirect(request.getContextPath() + "/patient/myappointments");
     }
 
     private void writeJson(HttpServletResponse response, boolean success, String message) throws IOException {

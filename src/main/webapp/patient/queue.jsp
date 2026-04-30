@@ -134,7 +134,6 @@
     </div>
 </div>
 <script>
-    document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     function logout() {
         Swal.fire({ title: 'Confirm logout?', icon: 'warning', showCancelButton: true, confirmButtonText: 'Yes', cancelButtonText: 'Cancel' })
             .then(r => { if (r.isConfirmed) window.location.href = '<%= ctx%>/login.jsp'; });

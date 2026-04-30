@@ -8,6 +8,11 @@
     String realName = (String) session.getAttribute("realName");
     if (realName == null) realName = "Patient";
     String avatar = "https://picsum.photos/200/200?random=1";
+
+    String successMsg = (String) session.getAttribute("successMsg");
+    String errorMsg = (String) session.getAttribute("errorMsg");
+    if (successMsg != null) session.removeAttribute("successMsg");
+    if (errorMsg != null) session.removeAttribute("errorMsg");
 %>
 <!DOCTYPE html>
 <html lang="en">
@@ -47,6 +52,16 @@
     </style>
 </head>
 <body class="min-h-screen">
+<% if (successMsg != null) { %>
+<script>
+    Swal.fire('Success', '<%= successMsg %>', 'success');
+</script>
+<% } %>
+<% if (errorMsg != null) { %>
+<script>
+    Swal.fire('Error', '<%= errorMsg %>', 'error');
+</script>
+<% } %>
 <div class="flex h-screen overflow-hidden relative">
 
     <div class="w-72 glass shadow-2xl flex flex-col border-r border-white/50 z-40">
