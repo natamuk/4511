@@ -174,10 +174,6 @@
 </div>
 
 <script>
-    document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-US', {
-        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-    });
-
     document.querySelectorAll('.reject-btn').forEach(btn => {
         btn.addEventListener('click', async function() {
             const appointmentId = this.dataset.id;
