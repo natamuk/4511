@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.*" %>
+<%@taglib uri="/WEB-INF/tlds/current-date.tld" prefix="today" %>
 <%
     String ctx = request.getContextPath();
     List<Map<String, Object>> myApps = (List<Map<String, Object>>) request.getAttribute("myAppointments");

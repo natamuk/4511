@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.*" %>
+<%@taglib uri="/WEB-INF/tlds/current-date.tld" prefix="today" %>
 <%
     String ctx = request.getContextPath();
     List<Map<String, Object>> appointments = (List<Map<String, Object>>) request.getAttribute("appointments");
@@ -116,7 +117,7 @@
                 <h2 class="text-2xl font-semibold">Appointment Management</h2>
                 <p class="text-sm text-gray-500 mt-1">View and manage patient bookings</p>
             </div>
-            <span id="current-date" class="text-sm text-gray-500 font-medium"></span>
+            <today:today/>
         </header>
         <div class="flex-1 overflow-auto p-4 md:p-8">
             <div class="max-w-6xl mx-auto">
@@ -161,7 +162,7 @@
                                 </tr>
                                 <% } %>
                                 <% if (appointments.isEmpty()) { %>
-                                <tr><td colspan="6" class="text-center py-4">No appointments found.您</td></tr>
+                                <tr><td colspan="6" class="text-center py-4">No appointments found.</td></tr>
                                 <% } %>
                             </tbody>
                         </table>

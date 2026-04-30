@@ -81,7 +81,7 @@
     </head>
     <body class="min-h-screen">
         <div class="flex h-screen overflow-hidden relative">
-            <!-- 左侧导航栏 -->
+
             <div class="w-80 glass shadow-2xl flex flex-col border-r border-white/50 z-40 fixed h-full">
                 <div class="p-6 bg-gradient-to-r from-sky-700 to-blue-700">
                     <div class="flex items-center gap-3">
@@ -108,7 +108,7 @@
                     </div>
                 </div>
             </div>
-            <!-- 右侧内容 -->
+                    
             <div class="flex-1 flex flex-col min-w-0 ml-80">
                 <div class="flex-1 overflow-auto p-4 md:p-8">
                     <div class="max-w-6xl mx-auto">
